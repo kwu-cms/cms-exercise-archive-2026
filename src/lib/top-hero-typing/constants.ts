@@ -1,0 +1,12 @@
+export {
+  DELETE_CHAR_MS,
+  GAP_AFTER_DELETE_MS,
+  HOLD_AFTER_TYPING_MS,
+  MIN_CHAR_DELAY_MS,
+  PUNCTUATION_PAUSE_MS,
+} from '../mizuno/hero-typing/constants';
+
+export const MIN_PHRASE_DURATION_MS = 1_800;
+export const MAX_PHRASE_DURATION_MS = 4_500;
+export const MIN_CHARS_FOR_PHRASE_DURATION = 10;
+export const MAX_CHARS_FOR_PHRASE_DURATION = 22;

@@ -1,28 +1,47 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ProcessSteps from '../components/ProcessSteps.astro';
+import ThemeCards from '../components/ThemeCards.astro';
 import OutcomeSection from '../components/OutcomeSection.astro';
 import ScheduleSection from '../components/ScheduleSection.astro';
-import { TEACHERS, CROSS_CUTTING } from '../data/sessions';
-import { SITE, SET_META } from '../data/site';
-import { accentText, accentBg, accentBorder } from '../lib/accent';
-import { withBase } from '../lib/base-url';
+import { CROSS_CUTTING } from '../data/sessions';
+import { SITE } from '../data/site';
+import { TOP_HERO_PHRASES } from '../data/top/hero-phrases';
 ---
 
 <Layout title="TOP">
   <!-- HERO -->
-  <section class="border-b border-line">
-    <div class="mx-auto max-w-5xl px-6 py-16">
-      <p class="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">
+  <section class="top-hero border-b border-line">
+    <div
+      id="top-hero-canvas"
+      class="top-hero-canvas"
+      data-top-hero-canvas
+      aria-hidden="true"
+    />
+    <div class="top-hero__inner mx-auto max-w-5xl px-6">
+      <p class="top-hero__mark top-hero__mark--meta font-mono text-xs uppercase tracking-[0.2em]">
         {SITE.university}｜{SITE.year}年度
       </p>
-      <h1 class="mt-4 font-display text-2xl leading-snug text-ink sm:text-3xl">
+      <h1 class="top-hero__mark top-hero__mark--title font-display text-2xl leading-snug sm:text-3xl">
         {SITE.title}
       </h1>
-      <p class="mt-3 font-display text-lg leading-relaxed text-ink-soft sm:text-xl">
+      <p class="top-hero__mark top-hero__mark--tagline font-display text-lg leading-relaxed sm:text-xl">
         {SITE.heroTagline}
       </p>
-      <p class="mt-6 text-sm leading-loose text-ink-soft">{SITE.heroLead}</p>
+      <div class="top-hero__typing" data-top-hero-typing>
+        <div class="top-hero__typing-stage">
+          <p class="top-hero__mark top-hero__mark--typing font-display text-lg leading-relaxed sm:text-xl">
+            <span data-top-hero-typing-text></span><span
+              class="top-hero__typing-cursor"
+              data-top-hero-typing-cursor
+              aria-hidden="true"></span>
+          </p>
+        </div>
+        <span class="sr-only" data-top-hero-typing-live aria-live="polite">
+          {TOP_HERO_PHRASES[0]?.text}
+        </span>
+      </div>
+      <p class="top-hero__mark top-hero__mark--lead text-sm leading-loose">{SITE.heroLead}</p>
     </div>
   </section>
 
@@ -37,41 +56,162 @@ import { withBase } from '../lib/base-url';
         <ProcessSteps />
       </div>
       <p class="mt-6 text-sm leading-relaxed text-ink-soft">{CROSS_CUTTING.themeConnection}</p>
-      <div class="mt-8 grid gap-6 sm:grid-cols-3">
-        {(['takawo', 'mizuno', 'yao'] as const).map((t) => {
-          const meta = SET_META[t];
-          return (
-            <a
-              href={withBase(`/${t}/`)}
-              class:list={['group flex flex-col border p-5 transition-colors hover:bg-paper-dim', accentBorder[t]]}
-            >
-              <span class:list={['inline-block w-fit px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-paper', accentBg[t]]}>
-                {String(TEACHERS[t].order).padStart(2, '0')}｜{meta.theme}
-              </span>
-              <h3 class="mt-3 font-display text-base leading-snug text-ink">{meta.tagline}</h3>
-              <p class="mt-2 font-display text-sm leading-relaxed text-ink-soft">「{meta.question}」</p>
-              {meta.description && (
-                <p class="mt-3 flex-1 text-xs leading-relaxed text-ink-soft">{meta.description}</p>
-              )}
-              <dl class="mt-4 space-y-1 font-mono text-[0.6875rem] text-ink-soft">
-                <div class="flex justify-between gap-2">
-                  <dt>担当</dt>
-                  <dd class="text-ink">{TEACHERS[t].name}</dd>
-                </div>
-                <div class="flex justify-between gap-2">
-                  <dt>回数</dt>
-                  <dd class="text-ink">{meta.sessions}</dd>
-                </div>
-              </dl>
-              <span class:list={['mt-4 font-mono text-[0.6875rem] group-hover:underline', accentText[t]]}>
-                テーマを見る →
-              </span>
-            </a>
-          );
-        })}
+      <div class="mt-8">
+        <ThemeCards />
       </div>
     </div>
   </section>
 
   <ScheduleSection />
 </Layout>
+
+<script>
+  import { initTopHeroMetaballs } from '../lib/top-hero-metaballs/init';
+  import { initTopHeroTyping } from '../lib/top-hero-typing/init';
+
+  const bootTopHero = () => {
+    const metaballs = document.querySelector<HTMLElement>('[data-top-hero-canvas]');
+    if (metaballs) initTopHeroMetaballs(metaballs);
+
+    const typing = document.querySelector<HTMLElement>('[data-top-hero-typing]');
+    if (typing) initTopHeroTyping(typing);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootTopHero, { once: true });
+  } else {
+    bootTopHero();
+  }
+
+  document.addEventListener('astro:page-load', bootTopHero);
+</script>
+
+<style>
+  .top-hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-paper);
+  }
+
+  .top-hero-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .top-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: color-mix(in srgb, var(--color-paper) 28%, transparent);
+    pointer-events: none;
+  }
+
+  .top-hero__inner {
+    position: relative;
+    z-index: 2;
+    padding-block: calc(3.5rem * 1.33);
+  }
+
+  .top-hero__mark {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0;
+    background: #fff;
+    color: var(--color-ink);
+    padding: 0.2em 0.45em;
+    line-height: 1.55;
+  }
+
+  .top-hero__mark + .top-hero__mark {
+    margin-top: 1rem;
+  }
+
+  .top-hero__mark--meta {
+    padding: 0.25em 0.5em;
+    font-size: 0.625rem;
+    letter-spacing: 0.16em;
+    line-height: 1.6;
+  }
+
+  .top-hero__mark--tagline {
+    padding: 0.18em 0.42em;
+    line-height: 1.5;
+  }
+
+  .top-hero__typing {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 1rem;
+  }
+
+  .top-hero__typing-stage {
+    width: fit-content;
+    max-width: 100%;
+    min-height: calc(1.5em + 0.36em);
+  }
+
+  .top-hero__mark--typing {
+    display: inline-flex;
+    align-items: baseline;
+    width: fit-content;
+    max-width: 100%;
+    line-height: 1.5;
+    padding: 0.18em 0.42em;
+    white-space: nowrap;
+  }
+
+  .top-hero__typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    margin-left: 0.12em;
+    background: var(--color-ink);
+    transform: translateY(0.08em);
+    animation: top-hero-cursor-blink 1.05s step-end infinite;
+  }
+
+  .top-hero__typing-cursor.is-hidden {
+    opacity: 0;
+    animation: none;
+  }
+
+  @keyframes top-hero-cursor-blink {
+    0%,
+    45% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .top-hero__typing + .top-hero__mark {
+    margin-top: 1rem;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .top-hero__mark--lead {
+    line-height: 1.75;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+</style>

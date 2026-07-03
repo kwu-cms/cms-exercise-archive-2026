@@ -48,5 +48,6 @@ export async function fetchArtworks(dataUrl = getArtworksDataUrl()): Promise<Art
 
   const data = (await res.json()) as ArtworksManifest | ArtworkInput[];
   const items = Array.isArray(data) ? data : data.artworks;
-  return normalizeArtworks(items ?? []);
+  const base = import.meta.env.BASE_URL;
+  return normalizeArtworks(items ?? [], base);
 }

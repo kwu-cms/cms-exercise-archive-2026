@@ -1,0 +1,108 @@
+---
+import { TEACHERS } from '../data/sessions';
+import { SET_META } from '../data/site';
+import { accentText, accentBg, accentBorder } from '../lib/accent';
+import { withBase } from '../lib/base-url';
+
+const themes = ['takawo', 'mizuno', 'yao'] as const;
+---
+
+<div class="theme-cards">
+  {
+    themes.map((t, i) => {
+      const meta = SET_META[t];
+      return (
+        <>
+          <a
+            href={withBase(`/${t}/`)}
+            class:list={['theme-cards__card group flex flex-col border p-5 transition-colors hover:bg-paper-dim', accentBorder[t]]}
+          >
+            <span class:list={['inline-block w-fit px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-paper', accentBg[t]]}>
+              {String(TEACHERS[t].order).padStart(2, '0')}｜{meta.theme}
+            </span>
+            <h3 class="mt-3 font-display text-base leading-snug text-ink">{meta.tagline}</h3>
+            <p class="mt-2 font-display text-sm leading-relaxed text-ink-soft">「{meta.question}」</p>
+            {meta.description && (
+              <p class="mt-3 flex-1 text-xs leading-relaxed text-ink-soft">{meta.description}</p>
+            )}
+            <dl class="mt-4 space-y-1 font-mono text-[0.6875rem] text-ink-soft">
+              <div class="flex justify-between gap-2">
+                <dt>担当</dt>
+                <dd class="text-ink">{TEACHERS[t].name}</dd>
+              </div>
+              <div class="flex justify-between gap-2">
+                <dt>回数</dt>
+                <dd class="text-ink">{meta.sessions}</dd>
+              </div>
+            </dl>
+            <span class:list={['mt-4 font-mono text-[0.6875rem] group-hover:underline', accentText[t]]}>
+              テーマを見る →
+            </span>
+          </a>
+          {i < themes.length - 1 && (
+            <>
+              <span class="theme-cards__arrow theme-cards__arrow--down font-mono text-sm text-ink-soft" aria-hidden="true">
+                ↓
+              </span>
+              <span class="theme-cards__arrow theme-cards__arrow--right font-mono text-sm text-ink-soft" aria-hidden="true">
+                →
+              </span>
+            </>
+          )}
+        </>
+      );
+    })
+  }
+</div>
+
+<style>
+  .theme-cards {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .theme-cards__card {
+    width: 100%;
+  }
+
+  .theme-cards__arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .theme-cards__arrow--down {
+    padding: 0.35rem 0;
+  }
+
+  .theme-cards__arrow--right {
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .theme-cards {
+      flex-direction: row;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+
+    .theme-cards__card {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .theme-cards__arrow--down {
+      display: none;
+    }
+
+    .theme-cards__arrow--right {
+      display: flex;
+      align-self: center;
+      padding: 0 0.15rem;
+    }
+  }
+</style>

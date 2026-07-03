@@ -1,4 +1,5 @@
 // @ts-check
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
@@ -16,8 +17,21 @@ export default defineConfig({
 
   vite: {
     plugins: [publicStaticPlugin(), tailwindcss()],
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+      alias: {
+        'react/jsx-dev-runtime': fileURLToPath(
+          new URL('./src/lib/react-jsx-dev-runtime-shim.ts', import.meta.url),
+        ),
+      },
+    },
+    oxc: {
+      jsx: {
+        development: false,
+      },
+    },
     optimizeDeps: {
-      include: ['mapbox-gl', 'p5'],
+      include: ['mapbox-gl', 'p5', 'react', 'react-dom', 'react/jsx-runtime'],
     },
     ssr: {
       noExternal: ['mapbox-gl'],

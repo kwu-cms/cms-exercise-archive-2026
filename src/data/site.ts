@@ -30,9 +30,6 @@ export const ARCHIVE_STATUS_LABEL: Record<ArchiveStatus, string> = {
   complete: '成果掲載：公開中',
 };
 
-export const OUTCOME_EMPTY_MESSAGE =
-  '履修者の提出後、2026年7月中旬より順次公開しました。';
-
 export const FOOTER_LINKS = [
   { label: '授業概要', href: '/' },
   {

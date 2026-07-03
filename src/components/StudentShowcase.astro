@@ -2,6 +2,13 @@
 import type { NotableSubmission } from '../lib/takawo/submissions';
 import MemoCallout from './MemoCallout.astro';
 import { SUBMISSION_PANELS } from '../lib/takawo/submissions';
+import { withBase } from '../lib/base-url';
+import {
+  PROJECT_CARD_HEIGHT,
+  PROJECT_CARD_WIDTH,
+  getSubmissionCard,
+  projectCardImagePath,
+} from '../lib/takawo/archetypes';
 
 interface Props {
   submissions: NotableSubmission[];
@@ -10,12 +17,21 @@ interface Props {
 
 const { submissions, showStudentIds = false } = Astro.props;
 
+function cardProject(item: NotableSubmission) {
+  const card = getSubmissionCard(item);
+  if (!card) return null;
+  return {
+    ...card,
+    imageSrc: withBase(projectCardImagePath(card.code)),
+  };
+}
+
 const CATEGORY_ORDER = ['出力形式', 'インサイト', '振り返り', '発展候補'] as const;
 const CATEGORY_DESC: Record<string, string> = {
-  出力形式: '診断結果の出力形式そのものを設計した企画',
-  インサイト: '深層動機の言語化・抽象化に取り組んだ分析',
-  振り返り: '振り返り文の記述と、診断形式への問いかけ',
-  発展候補: 'リサーチから企画まで一貫した設計の取り組み',
+  出力形式: '診断結果の出力形式を設計した企画',
+  インサイト: '深層動機の言語化・抽象化',
+  振り返り: '4回の授業を通じた振り返り文',
+  発展候補: 'リサーチから企画までまとめた提出',
 };
 
 const grouped = CATEGORY_ORDER.map((cat) => ({
@@ -23,10 +39,6 @@ const grouped = CATEGORY_ORDER.map((cat) => ({
   desc: CATEGORY_DESC[cat],
   items: submissions.filter((s) => s.category === cat),
 })).filter((g) => g.items.length > 0);
-
-const introText = showStudentIds
-  ? '履修者の提出物のうち、設計・分析として特筆すべき取り組みを抜粋して紹介します（テスト版：学籍番号は Word 原本との照合用）。'
-  : '履修者の提出物のうち、設計・分析として特筆すべき取り組みを、氏名・学籍番号等の個人情報を除いた形で抜粋して紹介します。';
 
 const modalPayload = submissions
   .filter((s) => s.submission)
@@ -46,8 +58,6 @@ const modalPayload = submissions
     </MemoCallout>
   )}
 
-  <p class="max-w-3xl text-sm leading-relaxed text-ink-soft">{introText}</p>
-
   {
     grouped.map((group) => (
       <div>
@@ -59,44 +69,59 @@ const modalPayload = submissions
         <ul class="mt-4 grid gap-4 sm:grid-cols-2">
           {group.items.map((item) => {
             const hasDetail = Boolean(item.submission);
+            const card = cardProject(item);
+            const cardBody = (
+              <div class="showcase-card__inner">
+                {card && (
+                  <div class="showcase-card__thumb">
+                    <img
+                      src={card.imageSrc}
+                      alt={`${card.name}（${card.code}）`}
+                      width={PROJECT_CARD_WIDTH}
+                      height={PROJECT_CARD_HEIGHT}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                )}
+                <div class="showcase-card__body p-4">
+                  {showStudentIds && item.internal?.student_id && (
+                    <p class="mb-2 font-mono text-[0.625rem] tracking-wide text-takawo">
+                      {item.internal.student_id}
+                      <span class="ml-2 text-ink-soft">({item.id})</span>
+                    </p>
+                  )}
+                  {card && (
+                    <p class="mb-1.5 font-mono text-[0.625rem] tracking-wide text-takawo">
+                      {card.code} · {card.name}
+                    </p>
+                  )}
+                  <p class="font-display text-sm leading-snug text-ink">{item.title}</p>
+                  <p class="mt-2 text-xs leading-relaxed text-ink-soft">{item.summary}</p>
+                  {item.note && (
+                    <p class="mt-2 font-mono text-[0.6875rem] text-takawo">{item.note}</p>
+                  )}
+                  {hasDetail && (
+                    <p class="mt-3 font-mono text-[0.625rem] tracking-wide text-takawo opacity-70 transition-opacity group-hover:opacity-100">
+                      提出内容を見る →
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
             return (
               <li>
                 {hasDetail ? (
                   <button
                     type="button"
-                    class="showcase-card showcase-card--interactive group w-full p-4 text-left"
+                    class="showcase-card showcase-card--interactive group w-full overflow-hidden text-left"
                     data-open-submission={item.id}
                     aria-haspopup="dialog"
                   >
-                    {showStudentIds && item.internal?.student_id && (
-                      <p class="mb-2 font-mono text-[0.625rem] tracking-wide text-takawo">
-                        {item.internal.student_id}
-                        <span class="ml-2 text-ink-soft">({item.id})</span>
-                      </p>
-                    )}
-                    <p class="font-display text-sm leading-snug text-ink">{item.title}</p>
-                    <p class="mt-2 text-xs leading-relaxed text-ink-soft">{item.summary}</p>
-                    {item.note && (
-                      <p class="mt-2 font-mono text-[0.6875rem] text-takawo">{item.note}</p>
-                    )}
-                    <p class="mt-3 font-mono text-[0.625rem] tracking-wide text-takawo opacity-70 transition-opacity group-hover:opacity-100">
-                      提出内容を見る →
-                    </p>
+                    {cardBody}
                   </button>
                 ) : (
-                  <div class="showcase-card p-4">
-                    {showStudentIds && item.internal?.student_id && (
-                      <p class="mb-2 font-mono text-[0.625rem] tracking-wide text-takawo">
-                        {item.internal.student_id}
-                        <span class="ml-2 text-ink-soft">({item.id})</span>
-                      </p>
-                    )}
-                    <p class="font-display text-sm leading-snug text-ink">{item.title}</p>
-                    <p class="mt-2 text-xs leading-relaxed text-ink-soft">{item.summary}</p>
-                    {item.note && (
-                      <p class="mt-2 font-mono text-[0.6875rem] text-takawo">{item.note}</p>
-                    )}
-                  </div>
+                  <div class="showcase-card overflow-hidden">{cardBody}</div>
                 )}
               </li>
             );
@@ -398,5 +423,45 @@ const modalPayload = submissions
     border-color: color-mix(in srgb, var(--color-takawo) 45%, var(--color-line));
     border-left-color: var(--color-takawo);
     outline: none;
+  }
+
+  .showcase-card__inner {
+    display: flex;
+    align-items: stretch;
+    min-height: 100%;
+  }
+
+  .showcase-card__thumb {
+    --showcase-card-width: clamp(6.25rem, 20vw, 8.75rem);
+    --showcase-card-ratio: 676 / 1044;
+
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    width: var(--showcase-card-width);
+    padding: 0.625rem 0.5rem;
+    border-right: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-ink) 88%, var(--color-takawo) 12%);
+  }
+
+  .showcase-card__thumb img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    aspect-ratio: var(--showcase-card-ratio);
+    object-fit: contain;
+    border-radius: 3px;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-takawo) 55%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--color-ink) 25%, transparent),
+      0 6px 18px rgba(28, 26, 21, 0.28);
+  }
+
+  .showcase-card__body {
+    min-width: 0;
+    flex: 1;
   }
 </style>

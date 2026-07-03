@@ -64,6 +64,8 @@ export interface NotableSubmission {
   title: string;
   summary: string;
   note?: string;
+  /** 成果カード画像コード（例: ALCH） */
+  archetypeCode?: string;
   /** Word 原本から抽出した提出課題の全文。公開コンポーネントでは参照しない */
   submission?: SubmissionContent;
   /** 非公開・内部トラッキング用。PUBLIC_SHOW_STUDENT_IDS=true のときのみ表示 */

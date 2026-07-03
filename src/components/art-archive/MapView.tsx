@@ -5,6 +5,7 @@ import type { Artwork } from '../../lib/art-archive/types';
 import { getVisibleCampusLabels } from '../../lib/art-archive/campus-labels';
 import { isPlyUrl } from '../../lib/art-archive/detect-3d-format';
 import { KONAN_WU, KONAN_WU_CENTER, MAP_STYLE, getMapZoomConstraints } from '../../lib/art-archive/map-config';
+import { setupMapbox } from '../../lib/art-archive/setup-mapbox';
 
 interface Props {
   artworks: Artwork[];
@@ -98,6 +99,7 @@ export default function MapView({ artworks, onSelect, mapboxToken }: Props) {
   useEffect(() => {
     if (!mapRef.current || !mapboxToken) return;
 
+    setupMapbox();
     mapboxgl.accessToken = mapboxToken;
 
     const map = new mapboxgl.Map({
