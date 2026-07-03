@@ -1,0 +1,49 @@
+---
+import EvalBars from './EvalBars.astro';
+import type { Deliverable } from '../data/deliverables';
+
+interface Props {
+  deliverable: Deliverable;
+  accentBar: string;
+  accentBg: string;
+  accentText: string;
+  evaluationLabel?: string;
+  evaluationNote?: string;
+}
+
+const {
+  deliverable: d,
+  accentBar,
+  accentBg,
+  accentText,
+  evaluationLabel = '評価配点',
+  evaluationNote,
+} = Astro.props;
+---
+
+<section class="border-b border-line bg-paper-dim/30">
+  <div class="mx-auto max-w-5xl px-6 py-10">
+    <h2 class="font-display text-lg text-ink">課題・評価</h2>
+    <div class="mt-6 grid gap-10 sm:grid-cols-[1.4fr_1fr]">
+      <div>
+        <h3 class="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">最終成果物</h3>
+        <ul class="mt-3 space-y-2 text-sm leading-relaxed text-ink">
+          {d.items.map((item) => (
+            <li class:list={['border-l-2 pl-3', accentBar]}>{item}</li>
+          ))}
+        </ul>
+      </div>
+      {d.evaluation.length > 0 && (
+        <div>
+          <h3 class="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">{evaluationLabel}</h3>
+          <div class="mt-3">
+            <EvalBars items={d.evaluation} accentBg={accentBg} accentText={accentText} />
+          </div>
+          {evaluationNote && (
+            <p class="mt-3 text-xs leading-relaxed text-ink-soft">{evaluationNote}</p>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,42 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ThemeHero from '../../components/ThemeHero.astro';
+import YaoArtArchiveSection from '../../components/YaoArtArchiveSection.astro';
+import ReferenceSection from '../../components/ReferenceSection.astro';
+import AssignmentSection from '../../components/AssignmentSection.astro';
+import ClassTimelineSection from '../../components/ClassTimelineSection.astro';
+import { DELIVERABLES } from '../../data/deliverables';
+import { SET_META } from '../../data/site';
+import { YAO_ROUNDS } from '../../data/rounds/yao';
+import { withBase } from '../../lib/base-url';
+
+const d = DELIVERABLES.yao;
+const meta = SET_META.yao;
+const mapboxToken = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? '';
+---
+
+<Layout title="03 アートアーカイブ" accent="yao">
+  <ThemeHero theme="yao" />
+
+  <ClassTimelineSection rounds={YAO_ROUNDS} intro={meta.timelineIntro} accent="yao" />
+
+  <ReferenceSection text={meta.reference} />
+
+  <YaoArtArchiveSection mapboxToken={mapboxToken} />
+
+  <AssignmentSection
+    deliverable={d}
+    accentBar="border-yao"
+    accentBg="bg-yao"
+    accentText="text-yao"
+  />
+
+  <section>
+    <div class="mx-auto max-w-5xl px-6 py-10">
+      <a href={withBase('/mizuno/')} class="group flex items-center justify-between border border-mizuno p-5 transition-colors hover:bg-paper-dim">
+        <span class="font-mono text-xs text-mizuno group-hover:underline">← 02 AIと日記</span>
+        <span class="text-sm text-ink-soft">次：第13回（7/9）まとめと振り返り</span>
+      </a>
+    </div>
+  </section>
+</Layout>

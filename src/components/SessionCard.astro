@@ -1,0 +1,87 @@
+---
+import SessionKindLabel from './SessionKindLabel.astro';
+import SessionHashtagTags from './SessionHashtagTags.astro';
+import type { Session } from '../data/sessions';
+import { TEACHERS } from '../data/sessions';
+import {
+  SESSION_CARD_BASE,
+  accentBorderLeft,
+  accentText,
+  type AccentKey,
+} from '../lib/accent';
+
+interface Props {
+  session: Session;
+  accent: AccentKey;
+  /** セットカード内の各回表示（担当名は省略） */
+  compact?: boolean;
+  /** 担当者名を表示する（compact 時は常に false） */
+  showInstructor?: boolean;
+}
+
+const { session, accent, compact = false, showInstructor: showInstructorProp } = Astro.props;
+
+const showInstructor = showInstructorProp ?? !compact;
+const instructor = session.instructor ?? TEACHERS[session.teacher].name;
+const accentClass = accent !== 'all' ? accentText[accent] : 'text-ink-soft';
+---
+
+{compact ? (
+  <div class="py-3">
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span class="font-mono text-[0.6875rem] font-medium text-ink">
+            第{String(session.no).padStart(2, '0')}回
+          </span>
+          <SessionKindLabel kind={session.kind} accent={accent} />
+          <span class="font-mono text-[0.6875rem] text-ink-soft">{session.date}</span>
+        </div>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink">{session.title}</p>
+        {session.outcome && (
+          <a
+            href={session.outcome.href}
+            class:list={['mt-1.5 inline-flex items-center gap-1.5 font-mono text-[0.625rem] hover:underline', accentClass]}
+          >
+            {session.outcome.label} →
+          </a>
+        )}
+      </div>
+      <SessionHashtagTags sessionNo={session.no} accent={accent} maxTags={1} class="max-w-[46%] shrink-0 sm:max-w-[38%]" />
+    </div>
+  </div>
+) : (
+  <article class:list={[SESSION_CARD_BASE, accentBorderLeft[accent], 'p-5']}>
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <span class="font-mono text-xs font-medium text-ink">
+            第{String(session.no).padStart(2, '0')}回
+          </span>
+          <SessionKindLabel kind={session.kind} accent={accent} />
+          <span class="font-mono text-[0.6875rem] text-ink-soft">{session.date}</span>
+        </div>
+
+        <h3 class="mt-3 font-display text-lg leading-snug text-ink">{session.title}</h3>
+
+        {showInstructor && (
+          <p class="mt-2 font-mono text-[0.6875rem] text-ink-soft">
+            担当：<span class:list={[accentClass]}>{instructor}</span>
+          </p>
+        )}
+
+        {session.outcome && (
+          <a
+            href={session.outcome.href}
+            class:list={['mt-2 inline-flex items-center gap-1.5 font-mono text-[0.625rem] hover:underline', accentClass]}
+          >
+            {session.outcome.label} →
+          </a>
+        )}
+
+        <slot />
+      </div>
+      <SessionHashtagTags sessionNo={session.no} accent={accent} class="max-w-[46%] shrink-0 sm:max-w-[38%]" />
+    </div>
+  </article>
+)}

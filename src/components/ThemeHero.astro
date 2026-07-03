@@ -1,0 +1,266 @@
+---
+import { TEACHERS, type Teacher } from '../data/sessions';
+import { SET_META } from '../data/site';
+import { MIZUNO_HERO_VIDEOS } from '../data/mizuno/hero-videos';
+import { YAO_HERO_VIDEOS } from '../data/yao/hero-videos';
+import { withBase } from '../lib/base-url';
+import { pickSsrHeroVideos } from '../lib/hero-video-ssr';
+
+interface Props {
+  theme: Teacher;
+}
+
+const { theme } = Astro.props;
+
+const meta = SET_META[theme];
+const t = TEACHERS[theme];
+const order = String(t.order).padStart(2, '0');
+const takawoHeroBg = withBase('/images/hero/takawo.png');
+
+const HERO_VIDEO_POOLS: Partial<Record<Teacher, readonly string[]>> = {
+  yao: YAO_HERO_VIDEOS,
+  mizuno: MIZUNO_HERO_VIDEOS,
+};
+
+const heroVideoPool = HERO_VIDEO_POOLS[theme] ?? [];
+const hasVideoGrid = heroVideoPool.length > 0;
+const hasMizunoTyping = theme === 'mizuno';
+const heroInitialVideos = pickSsrHeroVideos(heroVideoPool).map((path) => withBase(path));
+const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHeroBg}')` : undefined;
+---
+
+<section
+  class:list={[
+    'theme-hero border-b border-line',
+    `theme-hero--${theme}`,
+    hasVideoGrid && 'theme-hero--video-grid',
+    hasMizunoTyping && 'theme-hero--typing',
+  ]}
+  style={takawoHeroStyle}
+>
+  {hasMizunoTyping && (
+    <div
+      id="mizuno-hero-canvas"
+      class="mizuno-hero-canvas"
+      data-mizuno-hero-canvas
+      aria-hidden="true"
+    />
+  )}
+  {hasVideoGrid && (
+    <div class="hero-video-grid" data-hero-video-grid data-hero-theme={theme} aria-hidden="true">
+      {heroInitialVideos.map((src) => (
+        <video
+          class="hero-video"
+          src={src}
+          muted
+          autoplay
+          playsinline
+          preload="metadata"
+        />
+      ))}
+    </div>
+  )}
+  <div class="theme-hero__inner mx-auto max-w-5xl px-6">
+    <p class="theme-hero__meta hero-mark hero-mark--meta font-mono text-xs uppercase tracking-[0.2em]">
+      セット{order}｜{meta.sessions}（{meta.dates}）｜担当：{t.name}
+    </p>
+    <h1 class="theme-hero__title hero-mark mt-4 font-display text-3xl leading-snug sm:text-4xl">
+      {meta.tagline}
+    </h1>
+    <p class="theme-hero__question hero-mark hero-mark--question mt-4 font-display text-lg leading-snug sm:text-xl">
+      「{meta.question}」
+    </p>
+    {meta.description && (
+      <p class="mt-5 text-sm leading-relaxed text-ink-soft">{meta.description}</p>
+    )}
+  </div>
+</section>
+
+{hasMizunoTyping && (
+  <script>
+    import { initMizunoHeroTyping } from '../lib/mizuno/hero-typing/init';
+
+    const bootMizunoHero = () => {
+      const el = document.querySelector<HTMLElement>('[data-mizuno-hero-canvas]');
+      if (el) initMizunoHeroTyping(el);
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootMizunoHero, { once: true });
+    } else {
+      bootMizunoHero();
+    }
+
+    document.addEventListener('astro:page-load', bootMizunoHero);
+  </script>
+)}
+
+{hasVideoGrid && (
+  <script>
+    import { initAllHeroVideoGrids } from '../lib/hero-video-grid';
+    import { MIZUNO_HERO_VIDEOS } from '../data/mizuno/hero-videos';
+    import { YAO_HERO_VIDEOS } from '../data/yao/hero-videos';
+
+    const HERO_VIDEO_POOLS = {
+      yao: YAO_HERO_VIDEOS,
+      mizuno: MIZUNO_HERO_VIDEOS,
+    } as const;
+
+    const boot = () => initAllHeroVideoGrids(HERO_VIDEO_POOLS);
+
+    boot();
+    document.addEventListener('astro:page-load', boot);
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', boot);
+  </script>
+)}
+
+<style>
+  .theme-hero {
+    --hero-mark-bg: var(--color-ink);
+    position: relative;
+    background: var(--color-paper);
+  }
+
+  .theme-hero__inner {
+    position: relative;
+    z-index: 2;
+    /* 旧 py-14（3.5rem）の 133% */
+    padding-block: calc(3.5rem * 1.33);
+  }
+
+  .theme-hero--takawo {
+    --hero-mark-bg: var(--color-takawo);
+    background-color: var(--color-paper);
+    background-image: var(--takawo-hero-bg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .theme-hero--takawo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--color-paper) 42%, transparent);
+    pointer-events: none;
+  }
+
+  .theme-hero--mizuno {
+    --hero-mark-bg: var(--color-mizuno);
+    background: color-mix(in srgb, var(--color-mizuno-tint) 55%, var(--color-paper));
+  }
+
+  .theme-hero--yao {
+    --hero-mark-bg: var(--color-yao);
+    background: color-mix(in srgb, var(--color-yao-tint) 55%, var(--color-paper));
+  }
+
+  .theme-hero--video-grid {
+    overflow: hidden;
+  }
+
+  .theme-hero--video-grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: color-mix(in srgb, var(--color-paper) 38%, transparent);
+    pointer-events: none;
+  }
+
+  .theme-hero--typing {
+    overflow: hidden;
+  }
+
+  .theme-hero--typing::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: color-mix(in srgb, var(--color-paper) 22%, transparent);
+    pointer-events: none;
+  }
+
+  .mizuno-hero-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    .mizuno-hero-canvas {
+      opacity: 0.88;
+    }
+  }
+
+  .hero-video-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .hero-video {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+    opacity: 1;
+  }
+
+  @media (min-width: 640px) {
+    .hero-video-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .hero-video-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .hero-mark {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    background: var(--hero-mark-bg);
+    color: var(--color-paper);
+    padding: 0.2em 0.45em;
+    line-height: 1.55;
+  }
+
+  .hero-mark--meta {
+    padding: 0.25em 0.5em;
+    font-size: 0.625rem;
+    letter-spacing: 0.16em;
+    line-height: 1.6;
+  }
+
+  .hero-mark--question {
+    padding: 0.18em 0.42em;
+    line-height: 1.5;
+  }
+
+  .theme-hero__meta {
+    margin: 0;
+  }
+
+  .theme-hero__title,
+  .theme-hero__question {
+    margin-top: 1rem;
+  }
+
+  .theme-hero__meta + .theme-hero__title {
+    margin-top: 1rem;
+  }
+</style>

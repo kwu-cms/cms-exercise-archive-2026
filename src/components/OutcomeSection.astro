@@ -1,0 +1,119 @@
+---
+import { OUTCOMES, OUTCOMES_COMING_NOTE } from '../data/outcomes';
+import { OUTCOME_EMPTY_MESSAGE, SET_META } from '../data/site';
+import type { Teacher } from '../data/sessions';
+import { withBase } from '../lib/base-url';
+
+interface Props {
+  theme?: Teacher;
+  variant?: 'default' | 'overview';
+}
+
+const { theme, variant = 'default' } = Astro.props;
+
+const THEMES = ['takawo', 'mizuno', 'yao'] as const;
+
+const accentBorder: Record<Teacher, string> = {
+  takawo: 'border-takawo',
+  mizuno: 'border-mizuno',
+  yao: 'border-yao',
+};
+const accentText: Record<Teacher, string> = {
+  takawo: 'text-takawo',
+  mizuno: 'text-mizuno',
+  yao: 'text-yao',
+};
+const accentBg: Record<Teacher, string> = {
+  takawo: 'bg-takawo-tint/50',
+  mizuno: 'bg-mizuno-tint/50',
+  yao: 'bg-yao-tint/50',
+};
+
+const published = OUTCOMES.filter(
+  (w) => w.status === 'published' && (!theme || w.theme === theme),
+);
+const showPlaceholders = published.length === 0;
+const sectionClass = variant === 'overview' ? 'border-b border-line bg-paper-dim/30' : 'border-b border-line';
+---
+
+<section class={sectionClass} id="outcomes">
+  <div class="mx-auto max-w-5xl px-6 py-12">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h2 class="font-display text-xl text-ink">学生成果物</h2>
+        {showPlaceholders && (
+          <p class="mt-2 font-mono text-xs text-ink-soft">{OUTCOMES_COMING_NOTE}</p>
+        )}
+      </div>
+      {variant === 'overview' && !showPlaceholders && (
+        <a href={withBase('/#themes')} class="font-mono text-xs text-ink-soft transition-colors hover:text-ink hover:underline">
+          テーマ別に見る →
+        </a>
+      )}
+    </div>
+
+    {showPlaceholders ? (
+      variant === 'overview' ? (
+        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {THEMES.map((t) => (
+            <div
+              class:list={[
+                'flex aspect-[4/3] flex-col justify-end border border-dashed p-4',
+                accentBorder[t],
+                accentBg[t],
+              ]}
+            >
+              <p class:list={['font-mono text-[0.625rem] uppercase tracking-wider', accentText[t]]}>
+                {SET_META[t].theme}
+              </p>
+              <p class="mt-1 font-mono text-[0.625rem] uppercase tracking-wider text-ink-soft">準備中</p>
+              <p class="mt-1 text-xs text-ink-soft">{OUTCOMES_COMING_NOTE}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class:list={['mt-6 border border-dashed p-8', theme ? accentBorder[theme] : 'border-line']}>
+          <p class="font-mono text-xs uppercase tracking-wider text-ink-soft">準備中</p>
+          <p class="mt-3 text-sm leading-relaxed text-ink-soft">
+            {OUTCOME_EMPTY_MESSAGE}
+          </p>
+        </div>
+      )
+    ) : (
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {published.map((work) => {
+          const Tag = work.href ? 'a' : 'div';
+          return (
+            <Tag
+              href={work.href ? withBase(work.href) : undefined}
+              class:list={[
+                'group flex flex-col overflow-hidden border transition-colors hover:bg-paper-dim',
+                accentBorder[work.theme],
+              ]}
+            >
+              {work.thumbnail ? (
+                <img
+                  src={work.thumbnail}
+                  alt={work.title}
+                  class="aspect-[4/3] w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div class:list={['aspect-[4/3] w-full', accentBg[work.theme]]}></div>
+              )}
+              <div class="p-4">
+                <p class:list={['font-mono text-[0.625rem] uppercase tracking-wider', accentText[work.theme]]}>
+                  {SET_META[work.theme].theme}
+                </p>
+                <p class="mt-1 text-sm text-ink group-hover:underline">{work.title}</p>
+                {work.author && (
+                  <p class="mt-1 font-mono text-[0.6875rem] text-ink-soft">{work.author}</p>
+                )}
+              </div>
+            </Tag>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</section>

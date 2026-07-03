@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.local
+.DS_Store
+*.log
+
+# 参照用クローン（本番サイトには不要・大容量）
+reference/web_3dscan/
+
+# 学生提出 Word（公開リポジトリには含めない）
+reference/notable_students/
+
+# Hero マスター動画（Web 版は public/hero/ にコミット）
+public/images/hero/yao/*.mp4
+public/images/hero/yao/*.MP4
+public/images/hero/yao/*.mov
+public/images/hero/yao/*.MOV
+public/images/hero/mizuno/*.mp4
+public/images/hero/mizuno/*.MP4
+public/images/hero/mizuno/*.mov
+public/images/hero/mizuno/*.MOV

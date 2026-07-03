@@ -1,0 +1,24 @@
+---
+interface Props {
+  items: { label: string; weight: number }[];
+  accentBg: string; // 例: 'bg-takawo'
+  accentText: string; // 例: 'text-takawo'
+}
+const { items, accentBg, accentText } = Astro.props;
+---
+
+{items.length > 0 && (
+  <div class="space-y-3">
+    {items.map((item) => (
+      <div>
+        <div class="flex items-baseline justify-between gap-4 text-xs">
+          <span class="text-ink-soft">{item.label}</span>
+          <span class:list={['font-mono', accentText]}>{item.weight}%</span>
+        </div>
+        <div class="mt-1 h-1.5 w-full bg-paper-dim">
+          <div class:list={['h-full', accentBg]} style={`width:${item.weight}%`}></div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}

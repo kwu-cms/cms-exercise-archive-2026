@@ -1,0 +1,176 @@
+---
+import { SITE } from '../data/site';
+import { withBase } from '../lib/base-url';
+import NavLinks from './NavLinks.astro';
+
+interface Props {
+  accent?: 'takawo' | 'mizuno' | 'yao' | null;
+}
+
+const { accent = null } = Astro.props;
+---
+
+<header class="site-header">
+  <div class="site-header__inner mx-auto max-w-5xl px-6">
+    <div class="site-header__bar">
+      <a href={withBase('/')} class="site-header__logo font-display text-sm tracking-wide text-ink">
+        {SITE.title}<span class="ml-2 font-mono text-xs text-ink-soft">{SITE.year}</span>
+      </a>
+
+      <nav class="site-header__nav-desktop" aria-label="メイン">
+        <NavLinks accent={accent} variant="desktop" />
+      </nav>
+
+      <button
+        type="button"
+        class="site-header__toggle"
+        aria-expanded="false"
+        aria-controls="site-nav-panel"
+        aria-label="メニューを開く"
+      >
+        <span class="site-header__toggle-bar" aria-hidden="true"></span>
+        <span class="site-header__toggle-bar" aria-hidden="true"></span>
+        <span class="site-header__toggle-bar" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <nav id="site-nav-panel" class="site-header__panel" aria-label="メイン（モバイル）" hidden>
+      <NavLinks accent={accent} variant="mobile" />
+    </nav>
+  </div>
+</header>
+
+<script>
+  function initSiteHeader() {
+    const header = document.querySelector('.site-header');
+    const toggle = header?.querySelector<HTMLButtonElement>('.site-header__toggle');
+    const panel = document.getElementById('site-nav-panel');
+    if (!header || !toggle || !panel || toggle.dataset.bound === 'true') return;
+
+    toggle.dataset.bound = 'true';
+
+    const setOpen = (open: boolean) => {
+      header.classList.toggle('site-header--open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+      panel.hidden = open ? false : true;
+    };
+
+    toggle.addEventListener('click', () => {
+      setOpen(!header.classList.contains('site-header--open'));
+    });
+
+    panel.querySelectorAll('[data-nav-link]').forEach((link) => {
+      link.addEventListener('click', () => setOpen(false));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && header.classList.contains('site-header--open')) {
+        setOpen(false);
+      }
+    });
+
+    window.matchMedia('(min-width: 768px)').addEventListener('change', (e) => {
+      if (e.matches) setOpen(false);
+    });
+  }
+
+  initSiteHeader();
+  document.addEventListener('astro:page-load', initSiteHeader);
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    border-bottom: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-paper) 95%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .site-header__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    height: 3rem;
+  }
+
+  .site-header__logo {
+    min-width: 0;
+    flex: 1;
+  }
+
+  /* デスクトップ：横並びナビ */
+  .site-header__nav-desktop {
+    display: none;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  /* モバイル：ハンバーガー */
+  .site-header__toggle {
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.5rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-paper);
+    cursor: pointer;
+  }
+
+  .site-header__toggle-bar {
+    display: block;
+    height: 1px;
+    width: 100%;
+    background: var(--color-ink);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .site-header--open .site-header__toggle-bar:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .site-header--open .site-header__toggle-bar:nth-child(2) {
+    opacity: 0;
+  }
+
+  .site-header--open .site-header__toggle-bar:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  /* モバイル：ドロップダウンパネル */
+  .site-header__panel {
+    display: none;
+    border-top: 1px solid var(--color-line);
+    padding: 0.5rem 0 0.75rem;
+    background: var(--color-paper);
+  }
+
+  .site-header--open .site-header__panel:not([hidden]) {
+    display: block;
+  }
+
+  @media (min-width: 768px) {
+    .site-header__logo {
+      flex: initial;
+    }
+
+    .site-header__nav-desktop {
+      display: flex;
+    }
+
+    .site-header__toggle {
+      display: none;
+    }
+
+    .site-header__panel {
+      display: none !important;
+    }
+  }
+</style>

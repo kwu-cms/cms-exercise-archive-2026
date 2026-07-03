@@ -1,0 +1,36 @@
+---
+import YaoArtArchive from './art-archive/YaoArtArchive';
+import MemoCallout from './MemoCallout.astro';
+import { SET_META } from '../data/site';
+import { normalizeArtworks } from '../lib/art-archive/load-artworks';
+import manifest from '../data/yao/artworks.json';
+
+interface Props {
+  mapboxToken: string;
+}
+
+const { mapboxToken } = Astro.props;
+const { theme: themeName, outcomeHint } = SET_META.yao;
+const initialArtworks = normalizeArtworks(manifest.artworks, import.meta.env.BASE_URL);
+---
+
+<section class="border-b border-line" id="outcomes">
+  <div class="mx-auto max-w-5xl px-6 py-12">
+    <div>
+      <h2 class="font-display text-xl text-ink">学生成果物</h2>
+      <p class="mt-2 text-sm leading-relaxed text-ink-soft">{outcomeHint}</p>
+      <MemoCallout class="mt-3">
+        キャンパスマップのピンから、学生の3Dスキャン（.spz）や動画（.mp4）を閲覧できます。作品データは{' '}
+        <code>src/data/yao/artworks.json</code>{' '}
+        （ビルド時に <code>public/data/yao/</code> へ同期）から読み込みます。
+      </MemoCallout>
+    </div>
+
+    <div class="mt-6 overflow-hidden border border-yao border-t-2 bg-paper">
+      <div class="border-b border-line bg-yao-tint/40 px-4 py-2">
+        <p class="font-mono text-[0.625rem] uppercase tracking-wider text-yao">{themeName} · キャンパスアートマップ</p>
+      </div>
+      <YaoArtArchive client:visible mapboxToken={mapboxToken} initialArtworks={initialArtworks} />
+    </div>
+  </div>
+</section>

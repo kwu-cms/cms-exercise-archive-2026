@@ -1,0 +1,105 @@
+---
+import type { SessionKind } from '../data/sessions';
+import type { AccentKey } from '../lib/accent';
+
+interface Props {
+  kind: SessionKind;
+  /** 演習ラベルにセット色を反映（省略時は共通スタイル） */
+  accent?: AccentKey;
+}
+
+const { kind, accent } = Astro.props;
+const isLecture = kind === '講義';
+---
+
+<span
+  class:list={[
+    'session-kind',
+    isLecture ? 'session-kind--lecture' : 'session-kind--workshop',
+    !isLecture && accent && accent !== 'all' && `session-kind--workshop-${accent}`,
+  ]}
+>
+  {kind}
+</span>
+
+<style is:global>
+  .session-kind {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.1875rem 0.625rem 0.25rem;
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.03em;
+    border-radius: 0;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .session-kind::before {
+    content: '';
+    flex-shrink: 0;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 0;
+  }
+
+  /* 講義：濃色地＋白字 */
+  .session-kind--lecture {
+    color: var(--color-paper);
+    background: var(--color-ink);
+    border: 1px solid var(--color-ink);
+  }
+
+  .session-kind--lecture::before {
+    background: var(--color-paper);
+    border: none;
+  }
+
+  /* 演習：濃色地＋白字（制作・実践） */
+  .session-kind--workshop {
+    color: var(--color-paper);
+    background: var(--color-ink-soft);
+    border: 1px solid var(--color-ink-soft);
+  }
+
+  .session-kind--workshop::before {
+    background: var(--color-paper);
+    opacity: 0.92;
+  }
+
+  .session-kind--workshop-takawo {
+    color: var(--color-paper);
+    background: var(--color-takawo);
+    border-color: var(--color-takawo);
+  }
+
+  .session-kind--workshop-takawo::before {
+    background: var(--color-paper);
+    opacity: 1;
+  }
+
+  .session-kind--workshop-mizuno {
+    color: var(--color-paper);
+    background: var(--color-mizuno);
+    border-color: var(--color-mizuno);
+  }
+
+  .session-kind--workshop-mizuno::before {
+    background: var(--color-paper);
+    opacity: 1;
+  }
+
+  .session-kind--workshop-yao {
+    color: var(--color-paper);
+    background: var(--color-yao);
+    border-color: var(--color-yao);
+  }
+
+  .session-kind--workshop-yao::before {
+    background: var(--color-paper);
+    opacity: 1;
+  }
+</style>

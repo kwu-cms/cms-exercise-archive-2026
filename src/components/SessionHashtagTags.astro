@@ -1,0 +1,73 @@
+---
+import { SESSION_HASHTAGS } from '../data/sessions';
+import type { AccentKey } from '../lib/accent';
+
+interface Props {
+  sessionNo: number;
+  accent: AccentKey;
+  class?: string;
+  /** 表示するタグ数の上限（未指定なら全件） */
+  maxTags?: number;
+}
+
+const { sessionNo, accent, class: className, maxTags } = Astro.props;
+const allTags = SESSION_HASHTAGS[sessionNo] ?? [];
+const tags = maxTags != null ? allTags.slice(0, maxTags) : allTags;
+---
+
+{
+  tags.length > 0 && (
+    <div
+      class:list={['session-hashtags', `session-hashtags--${accent}`, className]}
+      aria-label="関連キーワード"
+    >
+      {tags.map((tag) => (
+        <span class="session-hashtag font-mono">{tag}</span>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  .session-hashtags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.375rem 0.5rem;
+  }
+
+  .session-hashtag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    color: var(--color-paper);
+    background: var(--color-ink-soft);
+    border: 1px solid var(--color-ink-soft);
+    border-radius: 0;
+    white-space: nowrap;
+  }
+
+  .session-hashtags--takawo .session-hashtag {
+    background: var(--color-takawo);
+    border-color: var(--color-takawo);
+  }
+
+  .session-hashtags--mizuno .session-hashtag {
+    background: var(--color-mizuno);
+    border-color: var(--color-mizuno);
+  }
+
+  .session-hashtags--yao .session-hashtag {
+    background: var(--color-yao);
+    border-color: var(--color-yao);
+  }
+
+  .session-hashtags--all .session-hashtag {
+    background: var(--color-ink-soft);
+    border-color: var(--color-ink-soft);
+  }
+</style>

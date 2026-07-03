@@ -1,0 +1,45 @@
+---
+import ClassTimeline from './ClassTimeline.astro';
+import type { Round } from '../data/rounds/types';
+
+interface Props {
+  rounds: Round[];
+  intro: string;
+  accent: 'takawo' | 'mizuno' | 'yao';
+}
+
+const { rounds, intro, accent } = Astro.props;
+
+const accentMap = {
+  takawo: { text: 'text-takawo', bg: 'bg-takawo' },
+  mizuno: { text: 'text-mizuno', bg: 'bg-mizuno' },
+  yao: { text: 'text-yao', bg: 'bg-yao' },
+} as const;
+
+const { text: accentText, bg: accentBg } = accentMap[accent];
+
+const timelineLabels = {
+  takawo: { points: '実施内容', task: 'ホームワーク' },
+  mizuno: { points: '授業のねらい', task: '取り組み' },
+  yao: { points: '授業のねらい', task: '取り組み' },
+} as const;
+
+const { points: pointsLabel, task: taskLabel } = timelineLabels[accent];
+---
+
+<section class="border-b border-line">
+  <div class="mx-auto max-w-5xl px-6 py-12">
+    <h2 class="font-display text-xl text-ink">授業の流れ</h2>
+    <p class="mt-2 text-sm leading-relaxed text-ink-soft">{intro}</p>
+    <div class="mt-10">
+      <ClassTimeline
+        rounds={rounds}
+        accent={accent}
+        accentText={accentText}
+        accentBg={accentBg}
+        pointsLabel={pointsLabel}
+        taskLabel={taskLabel}
+      />
+    </div>
+  </div>
+</section>

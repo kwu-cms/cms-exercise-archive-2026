@@ -1,0 +1,60 @@
+{
+  "artworks": [
+    {
+      "id": "sample1",
+      "title": "サンプル作品1",
+      "author": "学生A",
+      "comment": "Scaniverseスキャン sample1（ダミーデータ）",
+      "lat": 34.734529,
+      "lng": 135.2872,
+      "location_name": "甲南女子大学キャンパス",
+      "file_spz": "works/yao/sample1.spz",
+      "file_mp4": null,
+      "thumbnail": null,
+      "published": true,
+      "created_at": "2026-06-11"
+    },
+    {
+      "id": "sample2",
+      "title": "サンプル作品2",
+      "author": "学生B",
+      "comment": "Scaniverseスキャン sample2（ダミーデータ）",
+      "lat": 34.73485,
+      "lng": 135.2879,
+      "location_name": "甲南女子大学キャンパス",
+      "file_spz": "works/yao/sample2.spz",
+      "file_mp4": null,
+      "thumbnail": null,
+      "published": true,
+      "created_at": "2026-06-11"
+    },
+    {
+      "id": "room340",
+      "title": "340教室 机",
+      "author": "学生C",
+      "comment": "CSVコメント例の座標。3Dデータは sample1 を流用（ダミー）",
+      "lat": 34.734952,
+      "lng": 135.288402,
+      "location_name": "340教室",
+      "file_spz": "works/yao/sample1.spz",
+      "file_mp4": null,
+      "thumbnail": null,
+      "published": true,
+      "created_at": "2026-06-11"
+    },
+    {
+      "id": "ply-test-a225028",
+      "title": "PLYテスト（a225028）",
+      "author": "テスト",
+      "comment": "public/scans/a225028.ply の表示テスト用（青ピン）",
+      "lat": 34.734529,
+      "lng": 135.287563,
+      "location_name": "キャンパス中央（テスト）",
+      "file_spz": "scans/a225028.ply",
+      "file_mp4": null,
+      "thumbnail": null,
+      "published": true,
+      "created_at": "2026-07-03"
+    }
+  ]
+}

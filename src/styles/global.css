@@ -1,0 +1,268 @@
+@import "tailwindcss";
+
+@theme {
+  /* ---- ベースパレット ---- */
+  --color-paper: #f5f2e9;
+  --color-paper-dim: #ece7d9;
+  --color-ink: #1c1a15;
+  --color-ink-soft: #57534a;
+  --color-line: #d3ccb8;
+
+  /* ---- 教員アクセント（3セットの識別色） ---- */
+  --color-takawo: #b5722c;      /* 高尾｜診断メディア＝黄土 */
+  --color-takawo-tint: #f1e2cd;
+  --color-mizuno: #3f5a73;     /* 水野｜AIと日記＝藍鼠 */
+  --color-mizuno-tint: #dde6ec;
+  --color-yao: #55663c;        /* 八尾｜アートアーカイブ＝苔緑 */
+  --color-yao-tint: #e1e7d4;
+
+  /* ---- 運用メモ（Notion コールアウト風） ---- */
+  --color-memo: #c24e2f;
+  --color-memo-tint: #fae8e2;
+
+  /* ---- タイポグラフィ ---- */
+  --font-display: "Shippori Mincho", "Noto Serif JP", serif;
+  --font-body: "Noto Sans JP", "Hiragino Sans", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 125%;
+}
+
+html.fonts-loading body {
+  opacity: 0;
+}
+
+html.fonts-ready body {
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.fonts-loading body,
+  html.fonts-ready body {
+    opacity: 1;
+    transition: none;
+  }
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
+}
+
+/* ---- 提出課題モーダル（JS で innerHTML 挿入するためグローバル定義） ---- */
+.subm-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(11.5rem, 30%);
+  grid-template-areas:
+    'plan persona'
+    'reflection reflection';
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 767px) {
+  .subm-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'plan'
+      'persona'
+      'reflection';
+  }
+}
+
+.subm-panel {
+  border: 1px solid var(--color-line);
+  border-top: 3px solid var(--color-takawo);
+  background: var(--color-paper);
+  padding: 1.25rem 1.25rem 1.5rem;
+  min-height: 0;
+}
+
+@media (min-width: 640px) {
+  .subm-panel {
+    padding: 1.375rem 1.5rem 1.625rem;
+  }
+}
+
+.subm-panel--plan {
+  grid-area: plan;
+}
+
+.subm-panel--persona {
+  grid-area: persona;
+}
+
+.subm-panel--reflection {
+  grid-area: reflection;
+}
+
+.subm-panel-head {
+  margin-bottom: 1.125rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.subm-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  line-height: 1.35;
+  color: var(--color-ink);
+}
+
+@media (min-width: 640px) {
+  .subm-panel--plan .subm-panel-title {
+    font-size: 1.3125rem;
+  }
+
+  .subm-panel--persona .subm-panel-title {
+    font-size: 1.0625rem;
+  }
+
+  .subm-panel--reflection .subm-panel-title {
+    font-size: 1.1875rem;
+  }
+}
+
+.subm-panel-subtitle {
+  margin-top: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-soft);
+}
+
+.subm-panel--persona .subm-field-body,
+.subm-panel--persona .subm-field-body--lead {
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+
+.subm-panel--persona .subm-field-body--lead {
+  font-size: 0.9375rem;
+}
+
+.subm-panel--reflection .subm-field-body--reflection {
+  margin-top: 0;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.85;
+  color: var(--color-ink);
+  white-space: pre-wrap;
+}
+
+.subm-panel--reflection .subm-fields > article + article {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.subm-fields > article + article {
+  margin-top: 1.125rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-line) 75%, transparent);
+}
+
+.subm-field-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-takawo);
+}
+
+.subm-field-body {
+  margin-top: 0.625rem;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--color-ink);
+  white-space: pre-wrap;
+}
+
+.subm-field-body--lead {
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--color-ink);
+  white-space: pre-wrap;
+}
+
+.subm-field-body--prose {
+  font-size: 1rem;
+  line-height: 1.85;
+}
+
+.subm-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 0.625rem;
+}
+
+.subm-question {
+  border: 1px solid var(--color-line);
+  background: var(--color-paper-dim);
+  padding: 0.875rem 1rem;
+}
+
+.subm-question-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--color-ink-soft);
+}
+
+.subm-question-text {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--color-ink);
+  white-space: pre-wrap;
+}
+
+.subm-question-rationale {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed color-mix(in srgb, var(--color-line) 80%, transparent);
+}
+
+.subm-question-rationale-label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-soft);
+}
+
+.subm-question-rationale-text {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+  white-space: pre-wrap;
+}
+
+/* ---- キャンパスアートマップ：建物ラベルより作品ピンを前面に ---- */
+.mapboxgl-marker.campus-building-label {
+  z-index: 1;
+}
+
+.mapboxgl-marker.campus-art-pin {
+  z-index: 2;
+}

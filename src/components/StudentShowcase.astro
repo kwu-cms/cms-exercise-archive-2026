@@ -1,0 +1,402 @@
+---
+import type { NotableSubmission } from '../lib/takawo/submissions';
+import MemoCallout from './MemoCallout.astro';
+import { SUBMISSION_PANELS } from '../lib/takawo/submissions';
+
+interface Props {
+  submissions: NotableSubmission[];
+  showStudentIds?: boolean;
+}
+
+const { submissions, showStudentIds = false } = Astro.props;
+
+const CATEGORY_ORDER = ['出力形式', 'インサイト', '振り返り', '発展候補'] as const;
+const CATEGORY_DESC: Record<string, string> = {
+  出力形式: '診断結果の出力形式そのものを設計した企画',
+  インサイト: '深層動機の言語化・抽象化に取り組んだ分析',
+  振り返り: '振り返り文の記述と、診断形式への問いかけ',
+  発展候補: 'リサーチから企画まで一貫した設計の取り組み',
+};
+
+const grouped = CATEGORY_ORDER.map((cat) => ({
+  category: cat,
+  desc: CATEGORY_DESC[cat],
+  items: submissions.filter((s) => s.category === cat),
+})).filter((g) => g.items.length > 0);
+
+const introText = showStudentIds
+  ? '履修者の提出物のうち、設計・分析として特筆すべき取り組みを抜粋して紹介します（テスト版：学籍番号は Word 原本との照合用）。'
+  : '履修者の提出物のうち、設計・分析として特筆すべき取り組みを、氏名・学籍番号等の個人情報を除いた形で抜粋して紹介します。';
+
+const modalPayload = submissions
+  .filter((s) => s.submission)
+  .map((s) => ({
+    id: s.id,
+    title: s.title,
+    studentId: showStudentIds ? (s.internal?.student_id ?? null) : null,
+    submission: s.submission!,
+  }));
+---
+
+<div class="mt-6 space-y-10" data-student-showcase>
+  {showStudentIds && (
+    <MemoCallout>
+      テスト版：各カードの学籍番号は Word 提出物との照合用です。本番公開前に{' '}
+      <code>PUBLIC_SHOW_STUDENT_IDS=false</code> にしてください。
+    </MemoCallout>
+  )}
+
+  <p class="max-w-3xl text-sm leading-relaxed text-ink-soft">{introText}</p>
+
+  {
+    grouped.map((group) => (
+      <div>
+        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-line pb-2">
+          <h3 class="font-mono text-xs uppercase tracking-[0.2em] text-takawo">{group.category}</h3>
+          <p class="font-mono text-[0.6875rem] text-ink-soft">{group.desc}</p>
+        </div>
+
+        <ul class="mt-4 grid gap-4 sm:grid-cols-2">
+          {group.items.map((item) => {
+            const hasDetail = Boolean(item.submission);
+            return (
+              <li>
+                {hasDetail ? (
+                  <button
+                    type="button"
+                    class="showcase-card showcase-card--interactive group w-full p-4 text-left"
+                    data-open-submission={item.id}
+                    aria-haspopup="dialog"
+                  >
+                    {showStudentIds && item.internal?.student_id && (
+                      <p class="mb-2 font-mono text-[0.625rem] tracking-wide text-takawo">
+                        {item.internal.student_id}
+                        <span class="ml-2 text-ink-soft">({item.id})</span>
+                      </p>
+                    )}
+                    <p class="font-display text-sm leading-snug text-ink">{item.title}</p>
+                    <p class="mt-2 text-xs leading-relaxed text-ink-soft">{item.summary}</p>
+                    {item.note && (
+                      <p class="mt-2 font-mono text-[0.6875rem] text-takawo">{item.note}</p>
+                    )}
+                    <p class="mt-3 font-mono text-[0.625rem] tracking-wide text-takawo opacity-70 transition-opacity group-hover:opacity-100">
+                      提出内容を見る →
+                    </p>
+                  </button>
+                ) : (
+                  <div class="showcase-card p-4">
+                    {showStudentIds && item.internal?.student_id && (
+                      <p class="mb-2 font-mono text-[0.625rem] tracking-wide text-takawo">
+                        {item.internal.student_id}
+                        <span class="ml-2 text-ink-soft">({item.id})</span>
+                      </p>
+                    )}
+                    <p class="font-display text-sm leading-snug text-ink">{item.title}</p>
+                    <p class="mt-2 text-xs leading-relaxed text-ink-soft">{item.summary}</p>
+                    {item.note && (
+                      <p class="mt-2 font-mono text-[0.6875rem] text-takawo">{item.note}</p>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))
+  }
+</div>
+
+<div
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/75 p-3 backdrop-blur-[2px] sm:p-6"
+  data-submission-modal
+  aria-hidden="true"
+>
+  <div
+    class="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden border border-line bg-paper shadow-[0_24px_80px_rgba(28,26,21,0.28)] ring-1 ring-line/60"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="submission-modal-title"
+    tabindex="-1"
+    data-submission-dialog
+  >
+    <div class="shrink-0 border-b border-line bg-paper px-5 py-5 sm:px-8 sm:py-6">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h2
+            id="submission-modal-title"
+            class="font-display text-[1.375rem] leading-snug text-ink sm:text-2xl"
+            data-submission-title
+          />
+          <p
+            class="mt-1.5 hidden font-mono text-[0.6875rem] text-ink-soft"
+            data-submission-student-id
+          />
+        </div>
+        <button
+          type="button"
+          class="shrink-0 px-2 py-1 font-mono text-2xl leading-none text-ink-soft hover:text-ink"
+          data-submission-close
+          aria-label="閉じる"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="min-h-0 flex-1 overflow-y-auto bg-paper-dim/50 px-5 py-6 sm:px-8 sm:py-8"
+      data-submission-body
+    />
+  </div>
+</div>
+
+<script define:vars={{ modalPayload, submissionPanels: SUBMISSION_PANELS }}>
+  const root = document.querySelector('[data-student-showcase]');
+  const overlay = document.querySelector('[data-submission-modal]');
+  const dialog = overlay?.querySelector('[data-submission-dialog]');
+  const titleEl = overlay?.querySelector('[data-submission-title]');
+  const studentIdEl = overlay?.querySelector('[data-submission-student-id]');
+  const bodyEl = overlay?.querySelector('[data-submission-body]');
+  const closeBtn = overlay?.querySelector('[data-submission-close]');
+
+  if (!root || !overlay || !dialog || !bodyEl) {
+    // SSR / no-JS fallback
+  } else {
+    const dataById = Object.fromEntries(modalPayload.map((item) => [item.id, item]));
+    let lastFocus = null;
+
+    const C = {
+      grid: 'subm-grid',
+      panel: {
+        plan: 'subm-panel subm-panel--plan',
+        persona: 'subm-panel subm-panel--persona',
+        reflection: 'subm-panel subm-panel--reflection',
+      },
+      panelHead: 'subm-panel-head',
+      panelTitle: 'subm-panel-title',
+      panelSubtitle: 'subm-panel-subtitle',
+      fields: 'subm-fields',
+      fieldLabel: 'subm-field-label',
+      fieldBody: 'subm-field-body',
+      fieldLead: 'subm-field-body subm-field-body--lead',
+      fieldReflection: 'subm-field-body subm-field-body--reflection',
+      questions: 'subm-questions',
+      question: 'subm-question',
+      questionLabel: 'subm-question-label',
+      questionText: 'subm-question-text',
+      rationale: 'subm-question-rationale',
+      rationaleLabel: 'subm-question-rationale-label',
+      rationaleText: 'subm-question-rationale-text',
+    };
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderFieldBody(value, { lead = false, reflection = false, questions = false } = {}) {
+      if (questions) {
+        return `<div class="${C.questions}">${renderQuestions(value)}</div>`;
+      }
+
+      if (reflection) {
+        return `<div class="${C.fieldReflection}">${escapeHtml(value)}</div>`;
+      }
+
+      if (lead) {
+        return `<div class="${C.fieldLead}">${escapeHtml(value)}</div>`;
+      }
+
+      return `<div class="${C.fieldBody}">${escapeHtml(value)}</div>`;
+    }
+
+    function renderField(field, value) {
+      const isQuestions = field.key === 'questions';
+      const isReflection = field.key === 'reflection';
+      const labelHtml = isReflection
+        ? ''
+        : `<h4 class="${C.fieldLabel}">${escapeHtml(field.label)}</h4>`;
+
+      return `
+        <article>
+          ${labelHtml}
+          ${renderFieldBody(value, {
+            lead: Boolean(field.lead),
+            reflection: isReflection,
+            questions: isQuestions,
+          })}
+        </article>
+      `;
+    }
+
+    function renderQuestions(text) {
+      const blocks = text
+        .split(/(?=問\s*[：:]?\s*[0-9０-９]+)/)
+        .map((block) => block.trim())
+        .filter(Boolean);
+
+      if (blocks.length <= 1 && !/問\s*[：:]?\s*[0-9０-９]/.test(text)) {
+        return `<p class="${C.questionText}">${escapeHtml(text)}</p>`;
+      }
+
+      return blocks
+        .map((block, index) => {
+          const parts = block.split(/▶\s*なぜこの問いを設計するか[：:]/);
+          const questionPart = parts[0]?.trim() ?? '';
+          const rationale = parts.slice(1).join('').trim();
+          const labelMatch = questionPart.match(/^問\s*[：:]?\s*([0-9０-９]+)/);
+          const label = labelMatch ? `問${labelMatch[1]}` : `問${index + 1}`;
+          const questionText = questionPart
+            .replace(/^問\s*[：:]?\s*[0-9０-９]+\s*[：:]?\s*/, '')
+            .trim();
+
+          return `
+            <div class="${C.question}">
+              <p class="${C.questionLabel}">${escapeHtml(label)}</p>
+              <p class="${C.questionText}">${escapeHtml(questionText)}</p>
+              ${
+                rationale
+                  ? `
+                <div class="${C.rationale}">
+                  <p class="${C.rationaleLabel}">設計意図</p>
+                  <p class="${C.rationaleText}">${escapeHtml(rationale)}</p>
+                </div>
+              `
+                  : ''
+              }
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function renderPanel(panel, submission) {
+      const fields = panel.fields
+        .map((field) => {
+          const value = submission[field.key];
+          if (!value) return '';
+          return renderField(field, value);
+        })
+        .filter(Boolean)
+        .join('');
+
+      if (!fields) return '';
+
+      const panelClass = C.panel[panel.id] ?? C.panel.plan;
+
+      return `
+        <section class="${panelClass}" aria-labelledby="subm-panel-${panel.id}">
+          <header class="${C.panelHead}">
+            <h3 class="${C.panelTitle}" id="subm-panel-${panel.id}">${escapeHtml(panel.title)}</h3>
+            <p class="${C.panelSubtitle}">${escapeHtml(panel.subtitle)}</p>
+          </header>
+          <div class="${C.fields}">
+            ${fields}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderBody(submission) {
+      const plan = renderPanel(submissionPanels.find((p) => p.id === 'plan'), submission);
+      const persona = renderPanel(submissionPanels.find((p) => p.id === 'persona'), submission);
+      const reflection = renderPanel(
+        submissionPanels.find((p) => p.id === 'reflection'),
+        submission,
+      );
+
+      const top = [plan, persona].filter(Boolean).join('');
+      if (!top && !reflection) return '';
+
+      return `<div class="${C.grid}">${top}${reflection}</div>`;
+    }
+
+    function openModal(id) {
+      const item = dataById[id];
+      if (!item) return;
+
+      lastFocus = document.activeElement;
+
+      if (titleEl) titleEl.textContent = item.title;
+
+      if (studentIdEl) {
+        if (item.studentId) {
+          studentIdEl.textContent = item.studentId;
+          studentIdEl.classList.remove('hidden');
+        } else {
+          studentIdEl.textContent = '';
+          studentIdEl.classList.add('hidden');
+        }
+      }
+
+      bodyEl.innerHTML = renderBody(item.submission);
+
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      closeBtn?.focus();
+    }
+
+    function closeModal() {
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      bodyEl.innerHTML = '';
+
+      if (lastFocus instanceof HTMLElement) {
+        lastFocus.focus();
+      }
+    }
+
+    root.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const trigger = target.closest('[data-open-submission]');
+      if (!trigger) return;
+      const id = trigger.getAttribute('data-open-submission');
+      if (id) openModal(id);
+    });
+
+    closeBtn?.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+        closeModal();
+      }
+    });
+  }
+</script>
+
+<style>
+  .showcase-card {
+    border: 1px solid var(--color-line);
+    border-left-width: 2px;
+    border-left-color: var(--color-takawo);
+    background: var(--color-paper);
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .showcase-card--interactive {
+    cursor: pointer;
+  }
+
+  .showcase-card--interactive:hover,
+  .showcase-card--interactive:focus-visible {
+    background: color-mix(in srgb, var(--color-takawo-tint) 30%, var(--color-paper));
+    border-color: color-mix(in srgb, var(--color-takawo) 45%, var(--color-line));
+    border-left-color: var(--color-takawo);
+    outline: none;
+  }
+</style>

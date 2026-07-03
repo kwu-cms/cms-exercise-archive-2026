@@ -1,0 +1,61 @@
+---
+import { CROSS_CUTTING } from '../data/sessions';
+---
+
+<div class="process-steps">
+  {CROSS_CUTTING.process.map((step, i) => (
+    <>
+      <div class="process-steps__card">
+        <span class="font-mono text-xs text-ink-soft">{String(step.no).padStart(2, '0')}</span>
+        <span class="mt-1 block text-sm text-ink">{step.label}</span>
+      </div>
+      {i < CROSS_CUTTING.process.length - 1 && (
+        <span class="process-steps__arrow font-mono text-sm text-ink-soft" aria-hidden="true">↓</span>
+      )}
+    </>
+  ))}
+</div>
+
+<style>
+  .process-steps {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .process-steps__card {
+    width: 100%;
+    max-width: 18rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-paper);
+    padding: 1rem;
+  }
+
+  .process-steps__arrow {
+    display: block;
+    width: 100%;
+    max-width: 18rem;
+    padding: 0.35rem 0;
+    line-height: 1;
+    text-align: center;
+  }
+
+  @media (min-width: 640px) {
+    .process-steps {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+
+    .process-steps__card {
+      flex: 1 1 0;
+      max-width: none;
+    }
+
+    .process-steps__arrow {
+      display: none;
+    }
+  }
+</style>

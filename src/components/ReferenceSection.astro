@@ -1,0 +1,14 @@
+---
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+
+<section class="border-b border-line bg-paper-dim/20">
+  <div class="mx-auto max-w-5xl px-6 py-8">
+    <h2 class="font-mono text-xs uppercase tracking-[0.2em] text-ink-soft">参考</h2>
+    <p class="mt-3 text-sm leading-relaxed text-ink-soft">{text}</p>
+  </div>
+</section>

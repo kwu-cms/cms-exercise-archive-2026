@@ -1,0 +1,29 @@
+---
+import ScheduleSetCard from './ScheduleSetCard.astro';
+import SessionCard from './SessionCard.astro';
+import { SESSIONS, SESSION_SETS, CLOSING_SESSION_NO } from '../data/sessions';
+
+const closingSession = SESSIONS.find((s) => s.no === CLOSING_SESSION_NO)!;
+---
+
+<section id="schedule">
+  <div class="mx-auto max-w-5xl px-6 py-12">
+    <details class="group" open>
+      <summary class="cursor-pointer list-none font-display text-xl text-ink [&::-webkit-details-marker]:hidden">
+        <span class="flex items-center justify-between gap-4">
+          <span>授業スケジュール<span class="ml-2 font-mono text-xs font-normal text-ink-soft">全13回</span></span>
+          <span class="font-mono text-xs text-ink-soft group-open:hidden">開く ↓</span>
+          <span class="hidden font-mono text-xs text-ink-soft group-open:inline">閉じる ↑</span>
+        </span>
+      </summary>
+
+      <div class="mt-6 space-y-6">
+        {SESSION_SETS.map(({ teacher, sessionNos }) => (
+          <ScheduleSetCard teacher={teacher} sessionNos={sessionNos} />
+        ))}
+
+        <SessionCard session={closingSession} accent="all" />
+      </div>
+    </details>
+  </div>
+</section>

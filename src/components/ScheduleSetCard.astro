@@ -1,0 +1,57 @@
+---
+import SessionCard from './SessionCard.astro';
+import { SET_META } from '../data/site';
+import { TEACHERS, SESSIONS, type Teacher } from '../data/sessions';
+import {
+  SESSION_CARD_BASE,
+  accentBorderLeft,
+  accentText,
+  accentBg,
+  accentTint,
+} from '../lib/accent';
+import { withBase } from '../lib/base-url';
+
+interface Props {
+  teacher: Teacher;
+  sessionNos: number[];
+}
+
+const { teacher, sessionNos } = Astro.props;
+
+const meta = SET_META[teacher];
+const t = TEACHERS[teacher];
+const sessions = sessionNos.map((n) => SESSIONS.find((s) => s.no === n)!);
+---
+
+<article class:list={[SESSION_CARD_BASE, accentBorderLeft[teacher], accentTint[teacher], 'p-5 sm:p-6']}>
+  <header class="flex flex-wrap items-start justify-between gap-4 border-b border-line/80 pb-4">
+    <div class="min-w-0">
+      <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span class:list={['inline-block px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-paper', accentBg[teacher]]}>
+          {String(t.order).padStart(2, '0')}｜{meta.theme}
+        </span>
+        <span class="font-mono text-[0.6875rem] text-ink-soft">
+          {meta.sessions}（{meta.dates}）
+        </span>
+      </p>
+      <h3 class="mt-2 font-display text-base leading-snug text-ink">{meta.tagline}</h3>
+      <p class="mt-1 font-mono text-[0.6875rem] text-ink-soft">
+        担当：<span class="text-ink">{t.name}</span>
+      </p>
+    </div>
+    <a
+      href={withBase(`/${teacher}/`)}
+      class:list={['shrink-0 font-mono text-[0.6875rem] hover:underline', accentText[teacher]]}
+    >
+      詳細 →
+    </a>
+  </header>
+
+  <ol class="mt-1 divide-y divide-line/80">
+    {sessions.map((session) => (
+      <li>
+        <SessionCard session={session} accent={teacher} compact />
+      </li>
+    ))}
+  </ol>
+</article>

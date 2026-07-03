@@ -1,0 +1,23 @@
+---
+import StudentShowcase from './StudentShowcase.astro';
+import { SET_META } from '../data/site';
+import submissions from '../data/takawo/notable-submissions.json';
+import type { NotableSubmission } from '../lib/takawo/submissions';
+
+const { outcomeHint } = SET_META.takawo;
+const showStudentIds = import.meta.env.PUBLIC_SHOW_STUDENT_IDS === 'true';
+---
+
+<section class="border-b border-line" id="outcomes">
+  <div class="mx-auto max-w-5xl px-6 py-12">
+    <div>
+      <h2 class="font-display text-xl text-ink">学生成果物</h2>
+      <p class="mt-2 text-sm leading-relaxed text-ink-soft">{outcomeHint}</p>
+    </div>
+
+    <StudentShowcase
+      submissions={submissions as NotableSubmission[]}
+      showStudentIds={showStudentIds}
+    />
+  </div>
+</section>

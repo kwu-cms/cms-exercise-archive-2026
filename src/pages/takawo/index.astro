@@ -1,0 +1,41 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ThemeHero from '../../components/ThemeHero.astro';
+import TakawoStudentShowcaseSection from '../../components/TakawoStudentShowcaseSection.astro';
+import ReferenceSection from '../../components/ReferenceSection.astro';
+import AssignmentSection from '../../components/AssignmentSection.astro';
+import ClassTimelineSection from '../../components/ClassTimelineSection.astro';
+import { DELIVERABLES } from '../../data/deliverables';
+import { SET_META } from '../../data/site';
+import { TAKAWO_ROUNDS } from '../../data/rounds/takawo';
+import { withBase } from '../../lib/base-url';
+
+const d = DELIVERABLES.takawo;
+const meta = SET_META.takawo;
+---
+
+<Layout title="01 診断メディア" accent="takawo">
+  <ThemeHero theme="takawo" />
+
+  <ClassTimelineSection rounds={TAKAWO_ROUNDS} intro={meta.timelineIntro} accent="takawo" />
+
+  <ReferenceSection text={meta.reference} />
+
+  <TakawoStudentShowcaseSection />
+
+  <AssignmentSection
+    deliverable={d}
+    accentBar="border-takawo"
+    accentBg="bg-takawo"
+    accentText="text-takawo"
+  />
+
+  <section>
+    <div class="mx-auto max-w-5xl px-6 py-10">
+      <a href={withBase('/mizuno/')} class="group flex items-center justify-between border border-mizuno p-5 transition-colors hover:bg-paper-dim">
+        <span class="text-sm text-ink-soft">次のセット：第5回（5/8）から</span>
+        <span class="font-mono text-xs text-mizuno group-hover:underline">02 AIと日記 →</span>
+      </a>
+    </div>
+  </section>
+</Layout>

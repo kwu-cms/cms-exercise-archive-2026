@@ -1,0 +1,68 @@
+---
+import { NAV } from '../data/site';
+import { withBase } from '../lib/base-url';
+
+interface Props {
+  accent?: 'takawo' | 'mizuno' | 'yao' | null;
+  variant?: 'desktop' | 'mobile';
+}
+
+const { accent = null, variant = 'desktop' } = Astro.props;
+
+const activeClass =
+  accent === 'takawo'
+    ? 'text-takawo font-semibold'
+    : accent === 'mizuno'
+      ? 'text-mizuno font-semibold'
+      : accent === 'yao'
+        ? 'text-yao font-semibold'
+        : 'text-ink font-semibold';
+
+const linkClass =
+  variant === 'mobile'
+    ? 'site-nav-link site-nav-link--mobile'
+    : 'site-nav-link site-nav-link--desktop';
+---
+
+<style>
+  .site-nav-link--desktop {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    transition: color 0.15s ease;
+  }
+
+  .site-nav-link--desktop:hover {
+    color: var(--color-ink);
+  }
+
+  .site-nav-link--mobile {
+    display: block;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-line) 60%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-soft);
+    transition: color 0.15s ease;
+  }
+
+  .site-nav-link--mobile:last-child {
+    border-bottom: none;
+  }
+
+  .site-nav-link--mobile:hover {
+    color: var(--color-ink);
+  }
+</style>
+
+{NAV.map((item) => {
+  const isActive = accent ? item.href === `/${accent}/` : item.href === '/';
+  return (
+    <a href={withBase(item.href)} class:list={[linkClass, isActive ? activeClass : '']} data-nav-link>
+      {item.label}
+    </a>
+  );
+})}

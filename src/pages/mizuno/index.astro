@@ -1,0 +1,46 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ThemeHero from '../../components/ThemeHero.astro';
+import OutcomeSection from '../../components/OutcomeSection.astro';
+import ReferenceSection from '../../components/ReferenceSection.astro';
+import AssignmentSection from '../../components/AssignmentSection.astro';
+import ClassTimelineSection from '../../components/ClassTimelineSection.astro';
+import { DELIVERABLES } from '../../data/deliverables';
+import { SET_META } from '../../data/site';
+import { MIZUNO_ROUNDS } from '../../data/rounds/mizuno';
+import { withBase } from '../../lib/base-url';
+
+const d = DELIVERABLES.mizuno;
+const meta = SET_META.mizuno;
+---
+
+<Layout title="02 AIと日記" accent="mizuno">
+  <ThemeHero theme="mizuno" />
+
+  <ClassTimelineSection rounds={MIZUNO_ROUNDS} intro={meta.timelineIntro} accent="mizuno" />
+
+  <ReferenceSection text={meta.reference} />
+
+  <OutcomeSection theme="mizuno" />
+
+  <AssignmentSection
+    deliverable={d}
+    accentBar="border-mizuno"
+    accentBg="bg-mizuno"
+    accentText="text-mizuno"
+    evaluationLabel="評価軸"
+    evaluationNote="「わからない」と言語化することも評価対象に含まれる。正解の提示ではなく、プロセスへの関与を評価する設計。"
+  />
+
+  <section>
+    <div class="mx-auto max-w-5xl px-6 py-10 sm:grid sm:grid-cols-2 sm:gap-4">
+      <a href={withBase('/takawo/')} class="group flex items-center border border-takawo p-5 transition-colors hover:bg-paper-dim">
+        <span class="font-mono text-xs text-takawo group-hover:underline">← 01 診断メディア</span>
+      </a>
+      <a href={withBase('/yao/')} class="group mt-4 flex items-center justify-between border border-yao p-5 transition-colors hover:bg-paper-dim sm:mt-0">
+        <span class="text-sm text-ink-soft">次のセット：第9回（6/11）から</span>
+        <span class="font-mono text-xs text-yao group-hover:underline">03 アートアーカイブ →</span>
+      </a>
+    </div>
+  </section>
+</Layout>

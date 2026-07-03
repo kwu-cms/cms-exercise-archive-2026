@@ -1,0 +1,75 @@
+---
+// src/components/StudentShowcase.astro
+// 「学生成果物」セクション（id="outcomes"）に差し込むコンポーネント。
+// データは src/data/notable-submissions.json（匿名化済み）を参照する想定。
+//
+// 匿名化ポリシー:
+//   - 学籍番号・学生名は一切保持しない（id は表示専用の連番コード）
+//   - summary はNotion「学生 課題提出一覧」DBの「内容」列を元に、
+//     個人の属性が特定され得る記述を除去済み
+//
+// 区分（category）は4種: 出力形式 / インサイト / 振り返り / 発展候補
+
+interface Submission {
+  id: string;
+  category: "出力形式" | "インサイト" | "振り返り" | "発展候補";
+  title: string;
+  summary: string;
+  note?: string;
+  // internal: 非公開・内部トラッキング専用（学籍番号等）。
+  // このコンポーネントでは意図的に参照・分割代入しない。誤って
+  // {...item} のようなスプレッドで DOM に展開しないこと。
+  internal?: unknown;
+}
+
+interface Props {
+  submissions: Submission[];
+}
+
+const { submissions } = Astro.props;
+
+const CATEGORY_ORDER = ["出力形式", "インサイト", "振り返り", "発展候補"] as const;
+const CATEGORY_DESC: Record<string, string> = {
+  出力形式: "診断結果の出力形式そのものを設計した企画",
+  インサイト: "深層動機の言語化・抽象化の水準が高い分析",
+  振り返り: "記述密度・批判的深度が高い振り返り",
+  発展候補: "総合評価が高く、発展的協働の候補となる企画",
+};
+
+const grouped = CATEGORY_ORDER.map((cat) => ({
+  category: cat,
+  desc: CATEGORY_DESC[cat],
+  items: submissions.filter((s) => s.category === cat),
+})).filter((g) => g.items.length > 0);
+---
+
+<div class="mt-6 space-y-10">
+  <p class="max-w-3xl text-sm leading-relaxed text-ink-soft">
+    履修者の提出物のうち、設計・分析として特筆すべき取り組みを、氏名・学籍番号等の個人情報を除いた形で抜粋して紹介します。
+  </p>
+
+  {grouped.map((group) => (
+    <div>
+      <div class="flex items-baseline gap-3 border-b border-line pb-2">
+        <h3 class="font-mono text-xs uppercase tracking-[0.2em] text-takawo">
+          {group.category}
+        </h3>
+        <p class="font-mono text-[0.6875rem] text-ink-soft">{group.desc}</p>
+      </div>
+
+      <ul class="mt-4 grid gap-4 sm:grid-cols-2">
+        {group.items.map((item) => (
+          <li class="border-l-2 border-takawo bg-paper p-4">
+            <p class="font-display text-sm leading-snug text-ink">{item.title}</p>
+            <p class="mt-2 text-xs leading-relaxed text-ink-soft">{item.summary}</p>
+            {item.note && (
+              <p class="mt-2 font-mono text-[0.6875rem] text-takawo">
+                {item.note}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</div>

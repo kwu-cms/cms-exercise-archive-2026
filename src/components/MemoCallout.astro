@@ -1,0 +1,52 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<aside class:list={['memo-callout', className]} role="note" aria-label="メモ">
+  <p class="memo-callout__label">メモ</p>
+  <div class="memo-callout__body">
+    <slot />
+  </div>
+</aside>
+
+<style>
+  .memo-callout {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem 1rem;
+    align-items: start;
+    border: 1px solid color-mix(in srgb, var(--color-memo) 28%, var(--color-line));
+    border-left: 3px solid var(--color-memo);
+    background: color-mix(in srgb, var(--color-memo-tint) 72%, var(--color-paper));
+    padding: 0.75rem 1rem;
+  }
+
+  .memo-callout__label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-memo);
+    line-height: 1.6;
+  }
+
+  .memo-callout__body {
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.65;
+    color: var(--color-ink);
+  }
+
+  .memo-callout__body :global(code) {
+    border-radius: 0.125rem;
+    background: color-mix(in srgb, var(--color-paper) 55%, transparent);
+    padding: 0.1em 0.35em;
+  }
+</style>
