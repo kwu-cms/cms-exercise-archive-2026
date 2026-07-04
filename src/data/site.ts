@@ -30,21 +30,7 @@ export const ARCHIVE_STATUS_LABEL: Record<ArchiveStatus, string> = {
   complete: '成果掲載：公開中',
 };
 
-export const FOOTER_LINKS = [
-  { label: '授業概要', href: '/' },
-  {
-    label: '担当教員',
-    href: '/#themes',
-    sub: '高尾俊介・水野勝仁・八尾里絵子',
-  },
-  { label: 'シラバス', href: null },
-  { label: 'Instagram', href: null },
-  { label: 'GitHub', href: null },
-  {
-    label: '学科サイト',
-    href: 'https://www.konan-wu.ac.jp/faculty/letters/media/',
-  },
-] as const;
+export const FOOTER_LINKS = [{ label: '授業概要', href: '/' }] as const;
 
 export const NAV = [
   { href: '/', label: 'TOP' },

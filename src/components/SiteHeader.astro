@@ -11,7 +11,7 @@ const { accent = null } = Astro.props;
 ---
 
 <header class="site-header">
-  <div class="site-header__inner mx-auto max-w-5xl px-6">
+  <div class="site-header__inner mx-auto max-w-5xl px-4 md:px-6">
     <div class="site-header__bar">
       <a href={withBase('/')} class="site-header__logo font-display text-sm tracking-wide text-ink">
         {SITE.title}<span class="ml-2 font-mono text-xs text-ink-soft">{SITE.year}</span>
@@ -150,6 +150,13 @@ const { accent = null } = Astro.props;
     border-top: 1px solid var(--color-line);
     padding: 0.5rem 0 0.75rem;
     background: var(--color-paper);
+  }
+
+  @media (max-width: 767px) {
+    .site-header__panel {
+      margin-inline: -1rem;
+      padding-inline: 1rem;
+    }
   }
 
   .site-header--open .site-header__panel:not([hidden]) {

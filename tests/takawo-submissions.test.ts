@@ -25,6 +25,14 @@ describe('formatSubmissionSummary', () => {
     }
   });
 
+  it('does not repeat the reflection section label in card summaries', () => {
+    for (const item of submissions) {
+      if (item.category !== '振り返り') continue;
+      const formatted = formatSubmissionSummary(item.title, item.summary);
+      expect(formatted.startsWith('振り返り'), item.id).toBe(false);
+    }
+  });
+
   it('does not include real student names in internal metadata', () => {
     for (const item of submissions) {
       expect(item.internal?.student_name, item.id).toBeUndefined();
