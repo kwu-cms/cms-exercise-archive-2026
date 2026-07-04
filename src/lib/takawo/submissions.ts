@@ -73,8 +73,24 @@ export interface NotableSubmission {
     _note?: string;
     student_id: string;
     student_id_last3?: string;
-    /** 照合用。公開サイトでは表示しない */
-    student_name?: string;
+    /** 照合用（ファイル名のみ。氏名は含めない） */
     source_file?: string;
   };
+}
+
+/** カードタイトルと重複する先頭の「タイトル」… を除去する */
+export function formatSubmissionSummary(title: string, summary: string): string {
+  if (!title || !summary) return summary;
+
+  const trimmedTitle = title.trim();
+  const quoteMatch = summary.match(/^「([^」]+)」\s*/);
+  if (quoteMatch && quoteMatch[1].trim() === trimmedTitle) {
+    return summary.slice(quoteMatch[0].length);
+  }
+
+  if (summary.startsWith(trimmedTitle)) {
+    return summary.slice(trimmedTitle.length).trimStart();
+  }
+
+  return summary;
 }

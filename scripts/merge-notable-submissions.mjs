@@ -30,12 +30,11 @@ for (const item of submissions) {
     continue;
   }
   const data = extracted[sid];
-  const { student_name, source_file, ...fields } = data;
+  const { student_name: _studentName, source_file: _sourceFile, ...fields } = data;
   item.submission = fields;
   item.internal = {
     ...item.internal,
-    student_name,
-    source_file,
+    source_file: `${sid}.docx`,
   };
   merged += 1;
 }

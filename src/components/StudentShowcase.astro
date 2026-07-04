@@ -1,7 +1,7 @@
 ---
 import type { NotableSubmission } from '../lib/takawo/submissions';
 import MemoCallout from './MemoCallout.astro';
-import { SUBMISSION_PANELS } from '../lib/takawo/submissions';
+import { SUBMISSION_PANELS, formatSubmissionSummary } from '../lib/takawo/submissions';
 import { withBase } from '../lib/base-url';
 import {
   PROJECT_CARD_HEIGHT,
@@ -97,7 +97,9 @@ const modalPayload = submissions
                     </p>
                   )}
                   <p class="font-display text-sm leading-snug text-ink">{item.title}</p>
-                  <p class="mt-2 text-xs leading-relaxed text-ink-soft">{item.summary}</p>
+                  <p class="mt-2 text-xs leading-relaxed text-ink-soft">
+                    {formatSubmissionSummary(item.title, item.summary)}
+                  </p>
                   {item.note && (
                     <p class="mt-2 font-mono text-[0.6875rem] text-takawo">{item.note}</p>
                   )}
