@@ -5,8 +5,9 @@ import ThemeCards from '../components/ThemeCards.astro';
 import OutcomeSection from '../components/OutcomeSection.astro';
 import ScheduleSection from '../components/ScheduleSection.astro';
 import { CROSS_CUTTING } from '../data/sessions';
-import { SITE } from '../data/site';
+import { HERO_LEAD, SITE } from '../data/site';
 import { TOP_HERO_PHRASES } from '../data/top/hero-phrases';
+import { accentSectionBg } from '../lib/accent';
 ---
 
 <Layout title="TOP">
@@ -41,7 +42,13 @@ import { TOP_HERO_PHRASES } from '../data/top/hero-phrases';
           {TOP_HERO_PHRASES[0]?.text}
         </span>
       </div>
-      <p class="top-hero__mark top-hero__mark--lead text-sm leading-loose">{SITE.heroLead}</p>
+      <p class="top-hero__mark top-hero__mark--lead text-sm leading-loose">
+        {HERO_LEAD.intro}
+        {HERO_LEAD.themes.map((theme) => (
+          <span class:list={['top-hero__theme', accentSectionBg[theme.teacher]]}>「{theme.label}」</span>
+        ))}
+        {HERO_LEAD.outro}
+      </p>
     </div>
   </section>
 
@@ -107,7 +114,7 @@ import { TOP_HERO_PHRASES } from '../data/top/hero-phrases';
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: color-mix(in srgb, var(--color-paper) 28%, transparent);
+    background: color-mix(in srgb, var(--color-paper) 42%, transparent);
     pointer-events: none;
   }
 
@@ -122,10 +129,12 @@ import { TOP_HERO_PHRASES } from '../data/top/hero-phrases';
     width: fit-content;
     max-width: 100%;
     margin: 0;
-    background: #fff;
+    background: var(--color-paper);
     color: var(--color-ink);
     padding: 0.2em 0.45em;
     line-height: 1.55;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
   }
 
   .top-hero__mark + .top-hero__mark {
@@ -213,5 +222,11 @@ import { TOP_HERO_PHRASES } from '../data/top/hero-phrases';
     line-height: 1.75;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
+  }
+
+  .top-hero__theme {
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding: 0.06em 0.16em;
   }
 </style>

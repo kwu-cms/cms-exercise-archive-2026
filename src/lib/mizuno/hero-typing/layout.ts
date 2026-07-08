@@ -1,20 +1,24 @@
 import type p5 from 'p5';
 import {
-  FONT_SIZE_MAX,
-  FONT_SIZE_MAX_MOBILE,
+  FONT_SIZE_DESKTOP,
   FONT_SIZE_MIN,
+  FONT_SIZE_MOBILE,
   LINE_HEIGHT_RATIO,
   MAX_CHARS_FOR_DURATION,
   MAX_DURATION_MS,
   MIN_CHARS_FOR_DURATION,
   MIN_DURATION_MS,
   MOBILE_BREAKPOINT,
+  PADDING_X_RATIO,
+  PADDING_Y_RATIO,
 } from './constants';
 
 export interface TextLayoutContext {
   setFontSize(size: number): void;
   measureWidth(text: string): number;
   measureBounds(text: string): { w: number; h: number };
+  textHeightFor?(fontSize: number): number;
+  lineHeightFor?(fontSize: number): number;
 }
 
 export interface TextBox {
@@ -24,11 +28,10 @@ export interface TextBox {
   h: number;
 }
 
-export interface FitFontSizeResult {
+export interface TextLayout {
   fontSize: number;
-  lines: string[];
   lineHeight: number;
-  maxLines: number;
+  maxVisibleLines: number;
 }
 
 export function getDurationByLength(length: number): number {
@@ -39,54 +42,56 @@ export function getDurationByLength(length: number): number {
   return MIN_DURATION_MS + t * (MAX_DURATION_MS - MIN_DURATION_MS);
 }
 
+export function resolveHeroFontSize(canvasWidth: number): number {
+  const base = canvasWidth < MOBILE_BREAKPOINT ? FONT_SIZE_MOBILE : FONT_SIZE_DESKTOP;
+  return Math.max(FONT_SIZE_MIN, base);
+}
+
+/** フォントメトリクスから行高を算出（p5 textLeading と一致させる） */
+export function measureLineHeight(ctx: TextLayoutContext, fontSize: number): number {
+  if (ctx.lineHeightFor) {
+    return ctx.lineHeightFor(fontSize);
+  }
+  return Math.ceil(fontSize * LINE_HEIGHT_RATIO);
+}
+
 export function wrapJapaneseText(
   ctx: TextLayoutContext,
   text: string,
   maxWidth: number,
 ): string[] {
-  const chars = [...text];
   const lines: string[] = [];
-  let line = '';
+  const paragraphs = text.split(/\r?\n/);
 
-  for (const char of chars) {
-    const testLine = line + char;
-    if (ctx.measureWidth(testLine) > maxWidth && line.length > 0) {
-      lines.push(line);
-      line = char;
-    } else {
-      line = testLine;
+  for (let p = 0; p < paragraphs.length; p += 1) {
+    const paragraph = paragraphs[p]!;
+    const chars = [...paragraph];
+    let line = '';
+
+    for (const char of chars) {
+      const testLine = line + char;
+      if (ctx.measureWidth(testLine) > maxWidth && line.length > 0) {
+        lines.push(line);
+        line = char;
+      } else {
+        line = testLine;
+      }
+    }
+
+    if (line.length > 0) lines.push(line);
+
+    // 空行（連続改行）を保持
+    if (paragraph.length === 0 && p < paragraphs.length - 1) {
+      lines.push('');
     }
   }
 
-  if (line.length > 0) lines.push(line);
   return lines;
 }
 
-export function measureBlock(
-  ctx: TextLayoutContext,
-  lines: string[],
-  lineHeight: number,
-): { totalHeight: number; lastLineWidth: number } {
-  if (lines.length === 0) {
-    return { totalHeight: 0, lastLineWidth: 0 };
-  }
-
-  let maxW = 0;
-  for (const line of lines) {
-    const bounds = ctx.measureBounds(line);
-    maxW = Math.max(maxW, bounds.w);
-  }
-
-  const lastBounds = ctx.measureBounds(lines[lines.length - 1]!);
-  return {
-    totalHeight: lines.length * lineHeight,
-    lastLineWidth: lastBounds.w,
-  };
-}
-
 export function getTextBox(canvasW: number, canvasH: number): TextBox {
-  const paddingX = canvasW * 0.08;
-  const paddingY = canvasH * 0.16;
+  const paddingX = canvasW * PADDING_X_RATIO;
+  const paddingY = canvasH * PADDING_Y_RATIO;
   return {
     x: paddingX,
     y: paddingY,
@@ -95,32 +100,25 @@ export function getTextBox(canvasW: number, canvasH: number): TextBox {
   };
 }
 
-export function fitFontSize(
+export function createTextLayout(
   ctx: TextLayoutContext,
-  text: string,
-  boxW: number,
-  boxH: number,
   canvasWidth: number,
-): FitFontSizeResult {
-  const fontMax = canvasWidth < MOBILE_BREAKPOINT ? FONT_SIZE_MAX_MOBILE : FONT_SIZE_MAX;
+  boxH: number,
+): TextLayout {
+  const fontSize = resolveHeroFontSize(canvasWidth);
+  const lineHeight = measureLineHeight(ctx, fontSize);
+  const maxVisibleLines = Math.max(1, Math.floor(boxH / lineHeight));
+  return { fontSize, lineHeight, maxVisibleLines };
+}
 
-  for (let size = fontMax; size >= FONT_SIZE_MIN; size -= 1) {
-    ctx.setFontSize(size);
-    const lines = wrapJapaneseText(ctx, text, boxW);
-    const lineHeight = size * LINE_HEIGHT_RATIO;
-    const { totalHeight } = measureBlock(ctx, lines, lineHeight);
-
-    if (totalHeight <= boxH) {
-      const maxLines = Math.max(1, Math.floor(boxH / lineHeight));
-      return { fontSize: size, lines, lineHeight, maxLines };
-    }
-  }
-
-  ctx.setFontSize(FONT_SIZE_MIN);
-  const lines = wrapJapaneseText(ctx, text, boxW);
-  const lineHeight = FONT_SIZE_MIN * LINE_HEIGHT_RATIO;
-  const maxLines = Math.max(1, Math.floor(boxH / lineHeight));
-  return { fontSize: FONT_SIZE_MIN, lines, lineHeight, maxLines };
+/** 表示行数がビューポートを超えたときのスクロール量（px） */
+export function scrollOffsetForLines(
+  lineCount: number,
+  maxVisibleLines: number,
+  lineHeight: number,
+): number {
+  if (lineCount <= maxVisibleLines) return 0;
+  return (lineCount - maxVisibleLines) * lineHeight;
 }
 
 export function createP5TextLayoutContext(p: p5): TextLayoutContext {
@@ -140,6 +138,18 @@ export function createP5TextLayoutContext(p: p5): TextLayoutContext {
       const bounds = p.textBounds(text, 0, 0, fontSize) as { w: number; h: number };
       return { w: bounds.w, h: bounds.h };
     },
+    lineHeightFor(size: number) {
+      p.textSize(size);
+      const ascent = p.textAscent();
+      const descent = p.textDescent();
+      const metrics = ascent + descent;
+      const ratio = size * LINE_HEIGHT_RATIO;
+      return Math.ceil(Math.max(metrics + 6, ratio * 0.92));
+    },
+    textHeightFor(size: number) {
+      p.textSize(size);
+      return p.textAscent() + p.textDescent();
+    },
   };
 }
 
@@ -153,20 +163,35 @@ export function visibleLinesForText(
   return wrapJapaneseText(ctx, text, maxWidth);
 }
 
+export function lineTopY(box: TextBox, lineIndex: number, lineHeight: number, scrollY: number): number {
+  return box.y + lineIndex * lineHeight - scrollY;
+}
+
 export function cursorPosition(
   ctx: TextLayoutContext,
   lines: string[],
   box: TextBox,
   lineHeight: number,
   fontSize: number,
-): { x: number; y: number } | null {
-  if (lines.length === 0) return { x: box.x, y: box.y };
+  scrollY: number,
+): { x: number; y: number; h: number } | null {
+  if (lines.length === 0) {
+    const y = lineTopY(box, 0, lineHeight, scrollY);
+    return { x: box.x, y, h: cursorHeightFor(ctx, fontSize) };
+  }
 
   ctx.setFontSize(fontSize);
-  const lastLine = lines[lines.length - 1]!;
-  const bounds = ctx.measureBounds(lastLine);
+  const lineIndex = lines.length - 1;
+  const lastLine = lines[lineIndex]!;
+  const y = lineTopY(box, lineIndex, lineHeight, scrollY);
+
   return {
-    x: box.x + bounds.w + 4,
-    y: box.y + (lines.length - 1) * lineHeight,
+    x: box.x + ctx.measureWidth(lastLine) + 2,
+    y,
+    h: cursorHeightFor(ctx, fontSize),
   };
+}
+
+function cursorHeightFor(ctx: TextLayoutContext, fontSize: number): number {
+  return ctx.textHeightFor?.(fontSize) ?? fontSize;
 }

@@ -146,7 +146,7 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
   }
 
   .theme-hero--mizuno {
-    --hero-mark-bg: var(--color-mizuno);
+    --hero-mark-bg: rgb(63 90 115 / 0.65);
     background: color-mix(in srgb, var(--color-mizuno-tint) 55%, var(--color-paper));
   }
 
@@ -187,13 +187,15 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
     z-index: 0;
     width: 100%;
     height: 100%;
+    margin: 0;
     pointer-events: none;
   }
 
-  @media (max-width: 768px) {
-    .mizuno-hero-canvas {
-      opacity: 0.88;
-    }
+  .mizuno-hero-canvas :global(canvas) {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
   }
 
   .hero-video-grid {
@@ -233,10 +235,15 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
     display: block;
     width: fit-content;
     max-width: 100%;
-    background: var(--hero-mark-bg);
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    background-color: var(--hero-mark-bg);
     color: var(--color-paper);
     padding: 0.2em 0.45em;
     line-height: 1.55;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
   }
 
   .hero-mark--meta {

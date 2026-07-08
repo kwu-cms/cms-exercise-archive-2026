@@ -8,11 +8,21 @@ export const SITE = {
   year: 2026,
   university: '甲南女子大学 文学部 メディア表現学科',
   heroTagline: 'つくりながら考え、考えながらつくる。ゆるやかにつながる3つの演習テーマ。',
-  heroLead:
-    'メディア表現発展演習Ⅰはメディア表現学科2年次の必修科目です。2026年度は「診断メディアのデザインリサーチ」「AIと書く日記」「創造的アートアーカイブ」の3テーマを、担当教員がリレーで担いました。' +
-    '授業の記録と学生の成果物を、このサイトで公開しています。' ,
   archiveStatus: 'preparing' as ArchiveStatus,
 };
+
+/** TOPヒーロー説明文（3テーマは span で色分け表示） */
+export const HERO_LEAD = {
+  intro:
+    'メディア表現発展演習Ⅰはメディア表現学科2年次の必修科目です。2026年度は',
+  themes: [
+    { teacher: 'takawo' as const, label: '診断メディアのデザインリサーチ' },
+    { teacher: 'mizuno' as const, label: 'AIと書く日記' },
+    { teacher: 'yao' as const, label: '創造的アートアーカイブ' },
+  ],
+  outro:
+    'の3テーマを、担当教員がリレーで担いました。授業の記録と学生の成果物を、このサイトで公開しています。',
+} as const;
 
 export const ARCHIVE_STATUS: Record<
   ArchiveStatus,

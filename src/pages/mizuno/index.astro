@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import ThemeHero from '../../components/ThemeHero.astro';
-import OutcomeSection from '../../components/OutcomeSection.astro';
+import MizunoStudentShowcaseSection from '../../components/MizunoStudentShowcaseSection.astro';
 import ReferenceSection from '../../components/ReferenceSection.astro';
 import AssignmentSection from '../../components/AssignmentSection.astro';
 import ClassTimelineSection from '../../components/ClassTimelineSection.astro';
@@ -15,13 +15,19 @@ const meta = SET_META.mizuno;
 ---
 
 <Layout title="02 AIと日記" accent="mizuno">
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap"
+    slot="head"
+  />
+
   <ThemeHero theme="mizuno" />
 
   <ClassTimelineSection rounds={MIZUNO_ROUNDS} intro={meta.timelineIntro} accent="mizuno" />
 
   <ReferenceSection text={meta.reference} />
 
-  <OutcomeSection theme="mizuno" />
+  <MizunoStudentShowcaseSection />
 
   <AssignmentSection
     deliverable={d}

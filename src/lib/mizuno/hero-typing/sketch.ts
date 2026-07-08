@@ -5,24 +5,28 @@ import {
   DELETE_CHAR_MS,
   GAP_AFTER_DELETE_MS,
   HOLD_AFTER_TYPING_MS,
+  SCROLL_LERP,
   TEXT_FILL,
   TEXT_SHADOW,
 } from './constants';
 import {
   createP5TextLayoutContext,
+  createTextLayout,
   cursorPosition,
-  fitFontSize,
   getDurationByLength,
   getTextBox,
+  lineTopY,
+  scrollOffsetForLines,
   visibleLinesForText,
-  type FitFontSizeResult,
   type TextBox,
+  type TextLayout,
 } from './layout';
 import {
   computeBaseCharDelay,
   delayBeforeNextChar,
   type TypingPhase,
 } from './timing';
+import { createShuffleSequence } from './shuffle-sequence';
 
 export interface MizunoHeroTypingOptions {
   container: HTMLElement;
@@ -38,10 +42,10 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
   const { container, fontUrl, diaries, reducedMotion } = options;
 
   let resizeObserver: ResizeObserver | undefined;
+  const nextDiaryIndex = createShuffleSequence(diaries.length);
 
   function sketch(p: p5) {
     let diaryFont: p5.Font | null = null;
-    let currentIndex = 0;
     let currentText = '';
     let phase: TypingPhase = 'typing';
     let visibleCount = 0;
@@ -49,11 +53,12 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
     let lastStepTime = 0;
     let phaseStartTime = 0;
     let ready = false;
-    let layout: FitFontSizeResult = {
+    let scrollY = 0;
+    let scrollTargetY = 0;
+    let layout: TextLayout = {
       fontSize: 16,
-      lines: [],
-      lineHeight: 28,
-      maxLines: 1,
+      lineHeight: 32,
+      maxVisibleLines: 1,
     };
     let textBox: TextBox = { x: 0, y: 0, w: 0, h: 0 };
     const layoutCtx = createP5TextLayoutContext(p);
@@ -79,7 +84,7 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
       });
       resizeObserver.observe(container);
 
-      selectDiary(0);
+      selectDiary(nextDiaryIndex());
       ready = true;
     };
 
@@ -140,7 +145,7 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
       }
 
       if (phase === 'gap' && now - phaseStartTime >= GAP_AFTER_DELETE_MS) {
-        selectDiary((currentIndex + 1) % diaries.length);
+        selectDiary(nextDiaryIndex());
       }
     };
 
@@ -157,34 +162,54 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
     }
 
     function recalculateLayout() {
-      if (!currentText) return;
       textBox = getTextBox(p.width, p.height);
-      layout = fitFontSize(layoutCtx, currentText, textBox.w, textBox.h, p.width);
+      layout = createTextLayout(layoutCtx, p.width, textBox.h);
     }
 
     function selectDiary(index: number) {
       if (diaries.length === 0) return;
-      currentIndex = index;
-      currentText = diaries[currentIndex]?.text ?? '';
+      currentText = diaries[index]?.text ?? '';
       baseCharDelay = computeBaseCharDelay(currentText, getDurationByLength(currentText.length));
       phase = 'typing';
       visibleCount = 0;
+      scrollY = 0;
+      scrollTargetY = 0;
       lastStepTime = p.millis();
       phaseStartTime = lastStepTime;
       recalculateLayout();
     }
 
+    function updateScroll(lines: string[]) {
+      scrollTargetY = scrollOffsetForLines(
+        lines.length,
+        layout.maxVisibleLines,
+        layout.lineHeight,
+      );
+      scrollY = reducedMotion
+        ? scrollTargetY
+        : p.lerp(scrollY, scrollTargetY, SCROLL_LERP);
+    }
+
     function drawTextBlock(text: string, hideCursor: boolean) {
       if (!text) return;
 
+      if (diaryFont) p.textFont(diaryFont);
+
       textBox = getTextBox(p.width, p.height);
+      layout = createTextLayout(layoutCtx, p.width, textBox.h);
+
       p.textSize(layout.fontSize);
       p.textAlign(p.LEFT, p.TOP);
 
-      const visibleLines = visibleLinesForText(layoutCtx, text, textBox.w, layout.fontSize);
-      const drawLines = visibleLines.slice(0, layout.maxLines);
+      const lines = visibleLinesForText(layoutCtx, text, textBox.w, layout.fontSize);
+      updateScroll(lines);
 
       const ctx = p.drawingContext as CanvasRenderingContext2D;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(textBox.x, textBox.y, textBox.w, textBox.h);
+      ctx.clip();
+
       ctx.shadowColor = `rgba(${TEXT_SHADOW.join(',')})`;
       ctx.shadowBlur = 3;
       ctx.shadowOffsetX = 0;
@@ -193,8 +218,11 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
       p.noStroke();
       p.fill(...TEXT_FILL);
 
-      for (let i = 0; i < drawLines.length; i += 1) {
-        p.text(drawLines[i]!, textBox.x, textBox.y + i * layout.lineHeight);
+      for (let i = 0; i < lines.length; i += 1) {
+        const y = lineTopY(textBox, i, layout.lineHeight, scrollY);
+        if (y + layout.lineHeight < textBox.y) continue;
+        if (y > textBox.y + textBox.h) break;
+        p.text(lines[i]!, textBox.x, y);
       }
 
       ctx.shadowColor = 'transparent';
@@ -203,17 +231,20 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
       if (!hideCursor && Math.floor(p.frameCount / 28) % 2 === 0) {
         const pos = cursorPosition(
           layoutCtx,
-          drawLines,
+          lines,
           textBox,
           layout.lineHeight,
           layout.fontSize,
+          scrollY,
         );
         if (pos) {
           p.stroke(...CURSOR_STROKE);
-          p.strokeWeight(2);
-          p.line(pos.x, pos.y + 2, pos.x, pos.y + layout.fontSize * 1.2);
+          p.strokeWeight(Math.max(1.5, layout.fontSize * 0.06));
+          p.line(pos.x, pos.y, pos.x, pos.y + pos.h);
         }
       }
+
+      ctx.restore();
     }
 
     function drawSubtleBackground() {

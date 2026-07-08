@@ -1,0 +1,276 @@
+---
+import { MIZUNO_INTRODUCED_STUDENTS } from '../data/mizuno/diaries';
+import { diaryExcerpt } from '../lib/mizuno/students';
+import { SET_META } from '../data/site';
+
+const { outcomeHint } = SET_META.mizuno;
+
+const modalPayload = MIZUNO_INTRODUCED_STUDENTS.map((student) => ({
+  slug: student.slug,
+  label: student.label,
+  tags: student.tags,
+  metaDiary: student.metaDiary,
+  reflection: student.reflection,
+}));
+---
+
+<section class="border-b border-line" id="outcomes">
+  <div class="mx-auto max-w-5xl px-6 py-12">
+    <div>
+      <h2 class="font-display text-xl text-ink">学生成果物</h2>
+      <p class="mt-2 text-sm leading-relaxed text-ink-soft">{outcomeHint}</p>
+      <p class="mt-1 font-mono text-[0.6875rem] text-ink-soft">
+        メタ日記 {MIZUNO_INTRODUCED_STUDENTS.length}名分 — カードを開くと全文とリフレクション
+      </p>
+    </div>
+
+    <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-mizuno-diary-grid>
+      {
+        MIZUNO_INTRODUCED_STUDENTS.map((student) => (
+          <li>
+            <button
+              type="button"
+              class="diary-card group w-full text-left"
+              data-open-diary={student.slug}
+              aria-haspopup="dialog"
+            >
+              <div class="diary-card__head">
+                <span class="diary-card__kind font-mono text-[0.5625rem] uppercase tracking-[0.22em] text-mizuno">
+                  メタ日記
+                </span>
+                <h3 class="diary-card__title font-diary text-sm leading-snug text-ink">{student.label}</h3>
+              </div>
+              <p class="diary-card__excerpt text-xs leading-relaxed text-ink-soft">
+                {diaryExcerpt(student.metaDiary)}
+              </p>
+              <div class="diary-card__foot">
+                <div class="flex flex-wrap gap-1" aria-hidden="true">
+                  {student.tags.slice(0, 2).map((tag) => (
+                    <span class="diary-card__tag font-mono text-[0.5625rem] text-mizuno">{tag}</span>
+                  ))}
+                </div>
+                <span class="diary-card__more font-mono text-[0.5625rem] tracking-wide text-mizuno opacity-70 transition-opacity group-hover:opacity-100">
+                  開く →
+                </span>
+              </div>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<div
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/75 p-3 backdrop-blur-[2px] sm:p-6"
+  data-mizuno-diary-modal
+  aria-hidden="true"
+>
+  <div
+    class="flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden border border-line bg-paper shadow-[0_24px_80px_rgba(28,26,21,0.28)] ring-1 ring-line/60"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="mizuno-diary-modal-title"
+    tabindex="-1"
+    data-mizuno-diary-dialog
+  >
+    <div class="shrink-0 border-b border-line bg-paper px-5 py-5 sm:px-7 sm:py-6">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <p class="font-mono text-[0.5625rem] uppercase tracking-[0.22em] text-mizuno">メタ日記</p>
+          <h2
+            id="mizuno-diary-modal-title"
+            class="mt-1 font-display text-[1.25rem] leading-snug text-ink sm:text-xl"
+            data-mizuno-diary-title
+          />
+          <div class="mt-2 flex flex-wrap gap-1.5" data-mizuno-diary-tags hidden />
+        </div>
+        <button
+          type="button"
+          class="shrink-0 px-2 py-1 font-mono text-2xl leading-none text-ink-soft hover:text-ink"
+          data-mizuno-diary-close
+          aria-label="閉じる"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+
+    <div class="min-h-0 flex-1 overflow-y-auto bg-paper-dim/40 px-5 py-6 sm:px-7 sm:py-7">
+      <section>
+        <h3 class="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-mizuno">本文</h3>
+        <p
+          class="diary-modal__body mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink"
+          data-mizuno-diary-body
+        />
+      </section>
+
+      <section class="mt-8 border-t border-line pt-7">
+        <h3 class="font-mono text-[0.625rem] uppercase tracking-[0.2em] text-mizuno">リフレクション</h3>
+        <p
+          class="diary-modal__reflection mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft"
+          data-mizuno-diary-reflection
+        />
+      </section>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ modalPayload }}>
+  const grid = document.querySelector('[data-mizuno-diary-grid]');
+  const overlay = document.querySelector('[data-mizuno-diary-modal]');
+  const dialog = overlay?.querySelector('[data-mizuno-diary-dialog]');
+  const titleEl = overlay?.querySelector('[data-mizuno-diary-title]');
+  const tagsEl = overlay?.querySelector('[data-mizuno-diary-tags]');
+  const bodyEl = overlay?.querySelector('[data-mizuno-diary-body]');
+  const reflectionEl = overlay?.querySelector('[data-mizuno-diary-reflection]');
+  const closeBtn = overlay?.querySelector('[data-mizuno-diary-close]');
+
+  if (grid && overlay && dialog && titleEl && tagsEl && bodyEl && reflectionEl) {
+    const dataBySlug = Object.fromEntries(modalPayload.map((item) => [item.slug, item]));
+    let lastFocus = null;
+
+    function renderTags(tags) {
+      if (!tags.length) {
+        tagsEl.hidden = true;
+        tagsEl.innerHTML = '';
+        return;
+      }
+
+      tagsEl.hidden = false;
+      tagsEl.innerHTML = tags
+        .map(
+          (tag) =>
+            `<span class="inline-block border border-mizuno bg-mizuno px-2 py-0.5 font-mono text-[0.5625rem] font-semibold tracking-wide text-paper">${tag}</span>`,
+        )
+        .join('');
+    }
+
+    function openModal(slug) {
+      const item = dataBySlug[slug];
+      if (!item) return;
+
+      lastFocus = document.activeElement;
+      titleEl.textContent = item.label;
+      renderTags(item.tags);
+      bodyEl.textContent = item.metaDiary;
+      reflectionEl.textContent = item.reflection;
+
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      closeBtn?.focus();
+    }
+
+    function closeModal() {
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      titleEl.textContent = '';
+      tagsEl.hidden = true;
+      tagsEl.innerHTML = '';
+      bodyEl.textContent = '';
+      reflectionEl.textContent = '';
+
+      if (lastFocus instanceof HTMLElement) {
+        lastFocus.focus();
+      }
+    }
+
+    grid.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const trigger = target.closest('[data-open-diary]');
+      if (!trigger) return;
+      const slug = trigger.getAttribute('data-open-diary');
+      if (slug) openModal(slug);
+    });
+
+    closeBtn?.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+        closeModal();
+      }
+    });
+  }
+</script>
+
+<style>
+  .diary-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 10.5rem;
+    padding: 0.875rem 0.9rem 0.75rem;
+    border: 1px solid var(--color-line);
+    border-left: 2px solid var(--color-mizuno);
+    background-color: var(--color-paper);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(1.35rem - 0.5px),
+      color-mix(in srgb, var(--color-mizuno) 5%, var(--color-line)) calc(1.35rem - 0.5px),
+      color-mix(in srgb, var(--color-mizuno) 5%, var(--color-line)) calc(1.35rem - 0.5px + 0.5px)
+    );
+    background-size: 100% 1.35rem;
+    background-position: 0 2.75rem;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .diary-card:hover,
+  .diary-card:focus-visible {
+    background-color: color-mix(in srgb, var(--color-mizuno-tint) 35%, var(--color-paper));
+    border-color: color-mix(in srgb, var(--color-mizuno) 40%, var(--color-line));
+    border-left-color: var(--color-mizuno);
+    box-shadow: 0 4px 18px color-mix(in srgb, var(--color-mizuno) 10%, transparent);
+    outline: none;
+  }
+
+  .diary-card__head {
+    margin-bottom: 0.5rem;
+  }
+
+  .diary-card__title {
+    margin-top: 0.2rem;
+    letter-spacing: 0.02em;
+  }
+
+  .diary-card__excerpt {
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 0.15rem;
+  }
+
+  .diary-card__foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.65rem;
+    padding-top: 0.35rem;
+  }
+
+  .diary-card__tag {
+    padding: 0.1rem 0.3rem;
+    border: 1px solid color-mix(in srgb, var(--color-mizuno) 35%, var(--color-line));
+    background: color-mix(in srgb, var(--color-mizuno-tint) 55%, var(--color-paper));
+  }
+
+  .diary-modal__body,
+  .diary-modal__reflection {
+    text-indent: 0;
+  }
+</style>

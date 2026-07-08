@@ -1,4 +1,4 @@
-import diariesJson from './diaries.json';
+import { MIZUNO_INTRODUCED_STUDENTS, toHeroDiaries } from '../../lib/mizuno/students';
 
 export interface MizunoDiary {
   id: string;
@@ -7,4 +7,6 @@ export interface MizunoDiary {
   text: string;
 }
 
-export const MIZUNO_DIARIES: MizunoDiary[] = diariesJson as MizunoDiary[];
+export const MIZUNO_DIARIES: MizunoDiary[] = toHeroDiaries(MIZUNO_INTRODUCED_STUDENTS);
+
+export { MIZUNO_INTRODUCED_STUDENTS };

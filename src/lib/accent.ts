@@ -35,3 +35,10 @@ export const accentTint: Record<Teacher, string> = {
   mizuno: 'bg-mizuno-tint/40',
   yao: 'bg-yao-tint/40',
 };
+
+/** セクション背景用のティント（不透明） */
+export const accentSectionBg: Record<Teacher, string> = {
+  takawo: 'bg-takawo-tint',
+  mizuno: 'bg-mizuno-tint',
+  yao: 'bg-yao-tint',
+};
