@@ -12,6 +12,12 @@ reference/web_3dscan/
 # 学生提出 Word（公開リポジトリには含めない）
 reference/notable_students/
 
+# 八尾提出フォーム（個人情報・未確定データ）
+reference/2026-07-08/
+reference/2026-07-08/**
+!reference/2026-07-08/README.md
+reference/yao-ingest-state.json
+
 # Hero マスター動画（Web 版は public/hero/ にコミット）
 public/images/hero/yao/*.mp4
 public/images/hero/yao/*.MP4

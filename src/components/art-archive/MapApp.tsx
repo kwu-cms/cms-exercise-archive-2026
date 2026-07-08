@@ -1,7 +1,20 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import MapView from './MapView';
 import ArtworkModal from './ArtworkModal';
 import type { Artwork } from '../../lib/art-archive/types';
+import {
+  findArtworkByWorkId,
+  getWorkIdFromSearch,
+  setWorkIdInUrl,
+} from '../../lib/art-archive/artwork-url-params';
+import { scrollToYaoMapSection } from '../../lib/art-archive/map-scroll';
+import {
+  YAO_ART_CATEGORIES,
+  YAO_CATEGORY_COLORS,
+  matchesCategoryFilter,
+  shortCategoryLabel,
+  type YaoArtCategory,
+} from '../../lib/art-archive/categories';
 
 interface Props {
   artworks: Artwork[];
@@ -10,6 +23,64 @@ interface Props {
 
 export default function MapApp({ artworks, mapboxToken }: Props) {
   const [selected, setSelected] = useState<Artwork | null>(null);
+  const [activeCategories, setActiveCategories] = useState<Set<YaoArtCategory>>(new Set());
+  const openedWithPushRef = useRef(false);
+
+  const filteredArtworks = artworks.filter((a) =>
+    matchesCategoryFilter(a.categories, activeCategories),
+  );
+
+  const openArtwork = useCallback((artwork: Artwork) => {
+    setSelected(artwork);
+    if (getWorkIdFromSearch() !== artwork.id) {
+      setWorkIdInUrl(artwork.id, 'push');
+      openedWithPushRef.current = true;
+    }
+  }, []);
+
+  const closeArtwork = useCallback(() => {
+    if (openedWithPushRef.current && getWorkIdFromSearch()) {
+      openedWithPushRef.current = false;
+      history.back();
+      return;
+    }
+
+    setSelected(null);
+    if (getWorkIdFromSearch()) {
+      setWorkIdInUrl(null, 'replace');
+    }
+    requestAnimationFrame(() => scrollToYaoMapSection());
+  }, []);
+
+  useEffect(() => {
+    const workId = getWorkIdFromSearch();
+    const match = findArtworkByWorkId(artworks, workId) as Artwork | null;
+    setSelected(match);
+  }, [artworks]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      openedWithPushRef.current = false;
+      const workId = getWorkIdFromSearch();
+      const match = findArtworkByWorkId(artworks, workId) as Artwork | null;
+      setSelected(match);
+      if (!match) {
+        requestAnimationFrame(() => scrollToYaoMapSection());
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [artworks]);
+
+  const toggleCategory = (category: YaoArtCategory) => {
+    setActiveCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
+      return next;
+    });
+  };
 
   if (!mapboxToken) {
     return (
@@ -34,13 +105,54 @@ export default function MapApp({ artworks, mapboxToken }: Props) {
 
   return (
     <div className="relative h-full w-full">
-      <MapView artworks={artworks} onSelect={setSelected} mapboxToken={mapboxToken} />
-      {!selected && (
-        <p className="pointer-events-none absolute bottom-4 left-1/2 z-10 max-w-[90vw] -translate-x-1/2 rounded-full bg-paper/95 px-4 py-2 text-center font-mono text-xs text-ink-soft shadow-md">
-          ピンをクリックして3D作品を表示
+      <div className="absolute left-3 top-3 z-10 max-w-[calc(100%-1.5rem)] rounded border border-line bg-paper/95 p-2 shadow-sm backdrop-blur-sm">
+        <p className="mb-1.5 font-mono text-[0.625rem] uppercase tracking-wider text-ink-soft">
+          カテゴリで絞り込み
         </p>
-      )}
-      {selected && <ArtworkModal artwork={selected} onClose={() => setSelected(null)} />}
+        <div className="flex flex-wrap gap-1.5">
+          {YAO_ART_CATEGORIES.map((category) => {
+            const active = activeCategories.has(category);
+            const color = YAO_CATEGORY_COLORS[category];
+            return (
+              <button
+                key={category}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggleCategory(category)}
+                className="inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[0.625rem] transition-colors"
+                style={{
+                  borderColor: active ? color : 'var(--color-line)',
+                  backgroundColor: active ? `${color}22` : 'transparent',
+                  color: active ? color : 'var(--color-ink-soft)',
+                }}
+              >
+                <span
+                  className="inline-block h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: color }}
+                  aria-hidden
+                />
+                {shortCategoryLabel(category)}
+              </button>
+            );
+          })}
+          {activeCategories.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setActiveCategories(new Set())}
+              className="rounded border border-line px-2 py-1 font-mono text-[0.625rem] text-ink-soft hover:bg-paper-dim"
+            >
+              すべて表示
+            </button>
+          )}
+        </div>
+        <p className="mt-1.5 font-mono text-[0.5625rem] text-ink-soft">
+          {filteredArtworks.length} / {artworks.length} 件表示
+        </p>
+      </div>
+
+      <MapView artworks={filteredArtworks} onSelect={openArtwork} mapboxToken={mapboxToken} />
+
+      {selected && <ArtworkModal artwork={selected} onClose={closeArtwork} />}
     </div>
   );
 }

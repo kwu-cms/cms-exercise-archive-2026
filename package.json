@@ -8,11 +8,14 @@
   "scripts": {
     "predev": "node scripts/sync-yao-artworks.mjs && node scripts/sync-takawo-archetypes.mjs",
     "dev": "astro dev",
+    "dev:stop": "astro dev stop",
+    "dev:status": "astro dev status",
     "prebuild": "node scripts/sync-yao-artworks.mjs && node scripts/sync-takawo-archetypes.mjs",
     "build": "astro build",
     "encode:hero-yao": "node scripts/encode-yao-hero-videos.mjs",
     "encode:hero-mizuno": "node scripts/encode-mizuno-hero-videos.mjs",
     "merge-notable-submissions": "node scripts/merge-notable-submissions.mjs",
+    "ingest:yao": "node scripts/ingest-yao-submissions.mjs",
     "preview": "astro preview",
     "preview:pages": "npm run build:pages && astro preview",
     "build:pages": "node scripts/build-pages.mjs",
@@ -39,6 +42,7 @@
   "devDependencies": {
     "@types/mapbox-gl": "^3.4.1",
     "@types/p5": "^1.7.7",
+    "csv-parse": "^5.6.0",
     "vitest": "^4.1.0"
   }
 }

@@ -2,9 +2,10 @@ import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type { Artwork } from '../../lib/art-archive/types';
+import { getPinColor } from '../../lib/art-archive/categories';
 import { getVisibleCampusLabels } from '../../lib/art-archive/campus-labels';
-import { isPlyUrl } from '../../lib/art-archive/detect-3d-format';
 import { KONAN_WU, KONAN_WU_CENTER, MAP_STYLE, getMapZoomConstraints } from '../../lib/art-archive/map-config';
+import { attachMapViewDebugLogger } from '../../lib/art-archive/map-view-debug';
 import { setupMapbox } from '../../lib/art-archive/setup-mapbox';
 
 interface Props {
@@ -36,10 +37,7 @@ function createCampusLabelElement(name: string): HTMLDivElement {
   return el;
 }
 
-const PIN_COLOR = '#55663c';
-const PIN_COLOR_PLY = '#3f5a73';
-
-function createPinElement(onSelect: () => void, color = PIN_COLOR): HTMLButtonElement {
+function createPinElement(onSelect: () => void, color: string): HTMLButtonElement {
   const el = document.createElement('button');
   el.type = 'button';
   el.setAttribute('aria-label', '作品を表示');
@@ -80,15 +78,12 @@ export default function MapView({ artworks, onSelect, mapboxToken }: Props) {
     artworkMarkersRef.current = [];
 
     artworks.forEach((artwork) => {
-      const ply = isPlyUrl(artwork.urlSpz ?? '');
-      const el = createPinElement(
-        () => onSelectRef.current(artwork),
-        ply ? PIN_COLOR_PLY : PIN_COLOR,
-      );
+      const color = getPinColor(artwork.categories);
+      const el = createPinElement(() => onSelectRef.current(artwork), color);
       const marker = new mapboxgl.Marker({
         element: el,
         anchor: 'bottom',
-        className: ply ? 'campus-art-pin campus-art-pin--ply' : 'campus-art-pin',
+        className: 'campus-art-pin',
       })
         .setLngLat([artwork.lng, artwork.lat])
         .addTo(map);
@@ -118,6 +113,8 @@ export default function MapView({ artworks, onSelect, mapboxToken }: Props) {
     map.keyboard.disableRotation();
     mapInstanceRef.current = map;
 
+    const detachMapDebug = attachMapViewDebugLogger(map);
+
     map.once('idle', () => {
       getVisibleCampusLabels().forEach((label) => {
         const el = createCampusLabelElement(label.name);
@@ -135,6 +132,7 @@ export default function MapView({ artworks, onSelect, mapboxToken }: Props) {
     });
 
     return () => {
+      detachMapDebug();
       artworkMarkersRef.current.forEach((m) => m.remove());
       artworkMarkersRef.current = [];
       labelMarkersRef.current.forEach((m) => m.remove());

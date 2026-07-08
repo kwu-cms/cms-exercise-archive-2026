@@ -1,3 +1,5 @@
+import type { YaoArtCategory } from './categories';
+
 /** JSON（public/data/yao/artworks.json）1件分 */
 export interface ArtworkInput {
   id: string;
@@ -10,6 +12,7 @@ export interface ArtworkInput {
   file_spz?: string | null;
   file_mp4?: string | null;
   thumbnail?: string | null;
+  categories?: string[];
   /** true / 1 のみ地図に表示 */
   published?: boolean | number;
   created_at?: string;
@@ -25,6 +28,7 @@ export interface Artwork {
   title: string;
   author: string;
   comment: string | null;
+  categories: YaoArtCategory[];
   lat: number;
   lng: number;
   locationName: string | null;

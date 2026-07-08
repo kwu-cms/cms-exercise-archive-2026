@@ -31,7 +31,16 @@ export default defineConfig({
       },
     },
     optimizeDeps: {
-      include: ['mapbox-gl', 'p5', 'react', 'react-dom', 'react/jsx-runtime'],
+      include: [
+        'mapbox-gl',
+        'p5',
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'three',
+        'three/examples/jsm/controls/OrbitControls.js',
+        '@sparkjsdev/spark',
+      ],
     },
     ssr: {
       noExternal: ['mapbox-gl'],

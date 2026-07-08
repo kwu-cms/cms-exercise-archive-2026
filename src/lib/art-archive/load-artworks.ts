@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from './resolve-asset-url';
+import { normalizeCategories } from './categories';
 import type { Artwork, ArtworkInput, ArtworksManifest } from './types';
 
 /** 作品 JSON の URL（GitHub Pages の base 付き） */
@@ -24,6 +25,7 @@ export function normalizeArtwork(input: ArtworkInput, base = '/'): Artwork | nul
     title: input.title,
     author: input.author,
     comment: input.comment?.trim() ? input.comment.trim() : null,
+    categories: normalizeCategories(input.categories),
     lat: Number(input.lat),
     lng: Number(input.lng),
     locationName: input.location_name?.trim() ? input.location_name.trim() : null,
