@@ -4,7 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const inputDir = path.join(root, 'public/images/hero/yao');
+const masterDir = path.join(root, 'public/images/hero/yao');
+const worksDir = path.join(root, 'public/works/yao');
 const outputDir = path.join(root, 'public/hero');
 const manifestPath = path.join(root, 'src/data/yao/hero-videos.ts');
 
@@ -19,21 +20,38 @@ function ensureFfmpeg() {
   }
 }
 
-function listMasterVideos() {
-  if (!fs.existsSync(inputDir)) {
-    console.error(`入力ディレクトリがありません: ${inputDir}`);
-    process.exit(1);
-  }
-
-  return fs
-    .readdirSync(inputDir)
-    .filter((name) => VIDEO_EXT.test(name))
-    .sort((a, b) => a.localeCompare(b, 'en'));
-}
-
 function studentIdFromFilename(filename) {
   const base = path.basename(filename, path.extname(filename));
   return base.toLowerCase();
+}
+
+function listMasterVideos() {
+  /** @type {Map<string, string>} */
+  const byId = new Map();
+
+  const registerDir = (dir, prefer = false) => {
+    if (!fs.existsSync(dir)) return;
+    for (const name of fs.readdirSync(dir)) {
+      if (!VIDEO_EXT.test(name)) continue;
+      const studentId = studentIdFromFilename(name);
+      if (prefer || !byId.has(studentId)) {
+        byId.set(studentId, path.join(dir, name));
+      }
+    }
+  };
+
+  // アーカイブ作品の mp4 を広く拾い、hero 用マスターがあればそちらを優先
+  registerDir(worksDir);
+  registerDir(masterDir, true);
+
+  if (byId.size === 0) {
+    console.error(`マスター動画がありません: ${worksDir} または ${masterDir}`);
+    process.exit(1);
+  }
+
+  return [...byId.entries()]
+    .sort(([a], [b]) => a.localeCompare(b, 'en'))
+    .map(([studentId, inputPath]) => ({ studentId, inputPath }));
 }
 
 function outputNameFor(studentId) {
@@ -90,16 +108,9 @@ ensureFfmpeg();
 fs.mkdirSync(outputDir, { recursive: true });
 
 const masters = listMasterVideos();
-if (masters.length === 0) {
-  console.error(`マスター動画がありません: ${inputDir}`);
-  process.exit(1);
-}
-
 const webPaths = [];
 
-for (const filename of masters) {
-  const studentId = studentIdFromFilename(filename);
-  const inputPath = path.join(inputDir, filename);
+for (const { studentId, inputPath } of masters) {
   const outputFilename = outputNameFor(studentId);
   const outputPath = path.join(outputDir, outputFilename);
   const webPath = `/hero/${outputFilename}`;

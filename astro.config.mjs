@@ -39,6 +39,7 @@ export default defineConfig({
         'react/jsx-runtime',
         'three',
         'three/examples/jsm/controls/OrbitControls.js',
+        'three/examples/jsm/loaders/PLYLoader.js',
         '@sparkjsdev/spark',
       ],
     },

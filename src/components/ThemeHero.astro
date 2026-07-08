@@ -5,6 +5,10 @@ import { MIZUNO_HERO_VIDEOS } from '../data/mizuno/hero-videos';
 import { YAO_HERO_VIDEOS } from '../data/yao/hero-videos';
 import { withBase } from '../lib/base-url';
 import { pickSsrHeroVideos } from '../lib/hero-video-ssr';
+import { buildHeroOrbitCards } from '../lib/takawo/hero-card-orbit/build-cards';
+import type { NotableSubmission } from '../lib/takawo/submissions';
+import submissions from '../data/takawo/notable-submissions.json';
+import TakawoHeroCardOrbit from './takawo/TakawoHeroCardOrbit';
 
 interface Props {
   theme: Teacher;
@@ -15,7 +19,6 @@ const { theme } = Astro.props;
 const meta = SET_META[theme];
 const t = TEACHERS[theme];
 const order = String(t.order).padStart(2, '0');
-const takawoHeroBg = withBase('/images/hero/takawo.png');
 
 const HERO_VIDEO_POOLS: Partial<Record<Teacher, readonly string[]>> = {
   yao: YAO_HERO_VIDEOS,
@@ -25,8 +28,17 @@ const HERO_VIDEO_POOLS: Partial<Record<Teacher, readonly string[]>> = {
 const heroVideoPool = HERO_VIDEO_POOLS[theme] ?? [];
 const hasVideoGrid = heroVideoPool.length > 0;
 const hasMizunoTyping = theme === 'mizuno';
+const hasTakawoOrbit = theme === 'takawo';
+const hasImmersiveHero = hasVideoGrid || hasMizunoTyping;
 const heroInitialVideos = pickSsrHeroVideos(heroVideoPool).map((path) => withBase(path));
-const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHeroBg}')` : undefined;
+const heroOrbitCards = hasTakawoOrbit
+  ? buildHeroOrbitCards(submissions as NotableSubmission[], import.meta.env.BASE_URL)
+  : [];
+
+/** 「書けるの|か？」のように助詞と語尾が分断されないよう WORD JOINER を挿入 */
+function heroQuestionText(question: string): string {
+  return question.replace(/([のはが])([かが][？?])/g, '$1\u2060$2');
+}
 ---
 
 <section
@@ -35,8 +47,10 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
     `theme-hero--${theme}`,
     hasVideoGrid && 'theme-hero--video-grid',
     hasMizunoTyping && 'theme-hero--typing',
+    hasTakawoOrbit && 'theme-hero--card-orbit',
+    hasImmersiveHero && 'theme-hero--immersive',
   ]}
-  style={takawoHeroStyle}
+  style={undefined}
 >
   {hasMizunoTyping && (
     <div
@@ -60,6 +74,11 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
       ))}
     </div>
   )}
+  {hasTakawoOrbit && (
+    <div class="takawo-orbit-host" data-takawo-orbit>
+      <TakawoHeroCardOrbit client:visible cards={heroOrbitCards} />
+    </div>
+  )}
   <div class="theme-hero__inner mx-auto max-w-5xl px-6">
     <p class="theme-hero__meta hero-mark hero-mark--meta font-mono text-xs uppercase tracking-[0.2em]">
       セット{order}｜{meta.sessions}（{meta.dates}）｜担当：{t.name}
@@ -68,10 +87,10 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
       {meta.tagline}
     </h1>
     <p class="theme-hero__question hero-mark hero-mark--question mt-4 font-display text-lg leading-snug sm:text-xl">
-      「{meta.question}」
+      「{heroQuestionText(meta.question)}」
     </p>
-    {meta.description && (
-      <p class="mt-5 text-sm leading-relaxed text-ink-soft">{meta.description}</p>
+    {meta.description && !hasTakawoOrbit && (
+      <p class="theme-hero__description mt-5 text-sm leading-relaxed text-ink-soft">{meta.description}</p>
     )}
   </div>
 </section>
@@ -131,18 +150,83 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
   .theme-hero--takawo {
     --hero-mark-bg: var(--color-takawo);
     background-color: var(--color-paper);
-    background-image: var(--takawo-hero-bg);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
   }
 
-  .theme-hero--takawo::before {
+  .theme-hero--card-orbit,
+  .theme-hero--immersive {
+    min-height: min(100svh, 56rem);
+    overflow: hidden;
+  }
+
+  .theme-hero--card-orbit {
+    background:
+      radial-gradient(ellipse 85% 70% at 50% 38%, var(--color-takawo-hero-bg-mid) 0%, transparent 62%),
+      linear-gradient(168deg, #171d2a 0%, var(--color-takawo-hero-bg) 48%, #0f1218 100%);
+    border-bottom-color: rgb(245 242 233 / 0.1);
+  }
+
+  .theme-hero--card-orbit::before {
+    display: block;
     content: '';
     position: absolute;
     inset: 0;
-    background: color-mix(in srgb, var(--color-paper) 42%, transparent);
+    z-index: 1;
     pointer-events: none;
+    background: radial-gradient(ellipse 75% 55% at 50% 45%, transparent 35%, rgb(8 10 14 / 0.45) 100%);
+  }
+
+  .theme-hero--card-orbit .theme-hero__inner {
+    padding-block: 1.75rem 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .theme-hero--card-orbit .theme-hero__inner :global(.hero-mark) {
+    pointer-events: auto;
+  }
+
+  .theme-hero--card-orbit .theme-hero__question {
+    margin-bottom: 0;
+  }
+
+  .takawo-orbit-host {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .theme-hero--immersive .theme-hero__inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: min(100svh, 56rem);
+    padding-block: clamp(2.75rem, 10vh, 5rem);
+  }
+
+  .theme-hero--immersive .hero-mark--meta {
+    font-size: 0.6875rem;
+    padding: 0.3em 0.55em;
+    letter-spacing: 0.18em;
+  }
+
+  .theme-hero--immersive .theme-hero__title {
+    font-size: clamp(2.125rem, 5.2vw, 3.5rem);
+    line-height: 1.32;
+    margin-top: 1.25rem;
+  }
+
+  .theme-hero--immersive .theme-hero__question {
+    font-size: clamp(1.375rem, 2.9vw, 2rem);
+    line-height: 1.42;
+    margin-top: 1.25rem;
+    max-width: 37ch;
+  }
+
+  .theme-hero--immersive .theme-hero__description {
+    font-size: clamp(1rem, 1.8vw, 1.125rem);
+    line-height: 1.7;
+    margin-top: 1.5rem;
+    max-width: 42rem;
   }
 
   .theme-hero--mizuno {
@@ -242,6 +326,8 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
     color: var(--color-paper);
     padding: 0.2em 0.45em;
     line-height: 1.55;
+    line-break: strict;
+    overflow-wrap: normal;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
   }
@@ -269,5 +355,16 @@ const takawoHeroStyle = theme === 'takawo' ? `--takawo-hero-bg: url('${takawoHer
 
   .theme-hero__meta + .theme-hero__title {
     margin-top: 1rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-hero--card-orbit,
+    .theme-hero--immersive {
+      min-height: min(100svh, 44rem);
+    }
+
+    .theme-hero--immersive .theme-hero__inner {
+      min-height: min(100svh, 44rem);
+    }
   }
 </style>

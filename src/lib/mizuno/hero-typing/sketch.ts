@@ -163,7 +163,7 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
 
     function recalculateLayout() {
       textBox = getTextBox(p.width, p.height);
-      layout = createTextLayout(layoutCtx, p.width, textBox.h);
+      layout = createTextLayout(layoutCtx, p.width, p.height);
     }
 
     function selectDiary(index: number) {
@@ -196,7 +196,7 @@ export function createMizunoHeroTypingSketch(options: MizunoHeroTypingOptions): 
       if (diaryFont) p.textFont(diaryFont);
 
       textBox = getTextBox(p.width, p.height);
-      layout = createTextLayout(layoutCtx, p.width, textBox.h);
+      layout = createTextLayout(layoutCtx, p.width, p.height);
 
       p.textSize(layout.fontSize);
       p.textAlign(p.LEFT, p.TOP);

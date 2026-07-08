@@ -35,9 +35,6 @@ const modalPayload = MIZUNO_INTRODUCED_STUDENTS.map((student) => ({
               aria-haspopup="dialog"
             >
               <div class="diary-card__head">
-                <span class="diary-card__kind font-mono text-[0.5625rem] uppercase tracking-[0.22em] text-mizuno">
-                  メタ日記
-                </span>
                 <h3 class="diary-card__title font-diary text-sm leading-snug text-ink">{student.label}</h3>
               </div>
               <p class="diary-card__excerpt text-xs leading-relaxed text-ink-soft">
@@ -241,7 +238,6 @@ const modalPayload = MIZUNO_INTRODUCED_STUDENTS.map((student) => ({
   }
 
   .diary-card__title {
-    margin-top: 0.2rem;
     letter-spacing: 0.02em;
   }
 

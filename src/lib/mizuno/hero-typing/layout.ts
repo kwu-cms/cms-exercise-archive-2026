@@ -1,14 +1,15 @@
 import type p5 from 'p5';
 import {
-  FONT_SIZE_DESKTOP,
+  CHAR_WIDTH_SAMPLE,
+  FONT_SIZE_MAX,
   FONT_SIZE_MIN,
-  FONT_SIZE_MOBILE,
   LINE_HEIGHT_RATIO,
   MAX_CHARS_FOR_DURATION,
   MAX_DURATION_MS,
   MIN_CHARS_FOR_DURATION,
+  MIN_CHARS_PER_LINE,
   MIN_DURATION_MS,
-  MOBILE_BREAKPOINT,
+  MIN_VISIBLE_LINES,
   PADDING_X_RATIO,
   PADDING_Y_RATIO,
 } from './constants';
@@ -34,6 +35,10 @@ export interface TextLayout {
   maxVisibleLines: number;
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 export function getDurationByLength(length: number): number {
   const t = Math.min(
     1,
@@ -42,9 +47,60 @@ export function getDurationByLength(length: number): number {
   return MIN_DURATION_MS + t * (MAX_DURATION_MS - MIN_DURATION_MS);
 }
 
-export function resolveHeroFontSize(canvasWidth: number): number {
-  const base = canvasWidth < MOBILE_BREAKPOINT ? FONT_SIZE_MOBILE : FONT_SIZE_DESKTOP;
-  return Math.max(FONT_SIZE_MIN, base);
+/** 代表文字列から 1 字あたりの平均幅を測る（比例フォント近似） */
+export function measureAvgCharWidth(ctx: TextLayoutContext, fontSize: number): number {
+  ctx.setFontSize(fontSize);
+  const chars = [...CHAR_WIDTH_SAMPLE];
+  if (chars.length === 0) return fontSize;
+  return ctx.measureWidth(CHAR_WIDTH_SAMPLE) / chars.length;
+}
+
+/** 指定サイズで box 内に最低限の行数・字数が収まるか */
+export function fontSizeFitsBox(
+  ctx: TextLayoutContext,
+  fontSize: number,
+  boxW: number,
+  boxH: number,
+): boolean {
+  if (boxW <= 0 || boxH <= 0) return false;
+
+  const lineHeight = measureLineHeight(ctx, fontSize);
+  const visibleLines = Math.floor(boxH / lineHeight);
+  if (visibleLines < MIN_VISIBLE_LINES) return false;
+
+  const avgCharWidth = measureAvgCharWidth(ctx, fontSize);
+  const charsPerLine = Math.floor(boxW / avgCharWidth);
+  return charsPerLine >= MIN_CHARS_PER_LINE;
+}
+
+/**
+ * ヒーロー canvas の幅・高さから日記テキストの fontSize を近似算出。
+ * 行数（高さ）と 1 行字数（幅）の両方を満たす最大サイズを二分探索で求める。
+ */
+export function resolveHeroFontSize(
+  ctx: TextLayoutContext,
+  canvasWidth: number,
+  canvasHeight: number,
+): number {
+  const { w, h } = getTextBox(canvasWidth, canvasHeight);
+  if (w <= 0 || h <= 0) return FONT_SIZE_MIN;
+
+  const heightCap = Math.floor(h / (MIN_VISIBLE_LINES * LINE_HEIGHT_RATIO));
+  const upper = clamp(heightCap, FONT_SIZE_MIN, FONT_SIZE_MAX);
+
+  let lo = FONT_SIZE_MIN;
+  let hi = upper;
+
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (fontSizeFitsBox(ctx, mid, w, h)) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+
+  return lo;
 }
 
 /** フォントメトリクスから行高を算出（p5 textLeading と一致させる） */
@@ -103,11 +159,12 @@ export function getTextBox(canvasW: number, canvasH: number): TextBox {
 export function createTextLayout(
   ctx: TextLayoutContext,
   canvasWidth: number,
-  boxH: number,
+  canvasHeight: number,
 ): TextLayout {
-  const fontSize = resolveHeroFontSize(canvasWidth);
+  const box = getTextBox(canvasWidth, canvasHeight);
+  const fontSize = resolveHeroFontSize(ctx, canvasWidth, canvasHeight);
   const lineHeight = measureLineHeight(ctx, fontSize);
-  const maxVisibleLines = Math.max(1, Math.floor(boxH / lineHeight));
+  const maxVisibleLines = Math.max(1, Math.floor(box.h / lineHeight));
   return { fontSize, lineHeight, maxVisibleLines };
 }
 

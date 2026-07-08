@@ -56,6 +56,8 @@ export const SUBMISSION_ARCHETYPE_CODES = SUBMISSION_CARD_CODES;
 
 export const PROJECT_CARD_WIDTH = 676;
 export const PROJECT_CARD_HEIGHT = 1044;
+/** タロットカード画像の角丸半径（px） */
+export const PROJECT_CARD_CORNER_RADIUS = 28;
 
 export function projectCardImagePath(code: string): string {
   return `/works/takawo/cards/${code}.png`;

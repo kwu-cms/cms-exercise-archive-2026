@@ -38,12 +38,15 @@ function createCampusLabelElement(name: string): HTMLDivElement {
 }
 
 function createPinElement(onSelect: () => void, color: string): HTMLButtonElement {
+  const pinWidth = 19;
+  const pinHeight = 26;
+
   const el = document.createElement('button');
   el.type = 'button';
   el.setAttribute('aria-label', '作品を表示');
   el.style.cssText = [
-    'width:16px',
-    'height:22px',
+    `width:${pinWidth}px`,
+    `height:${pinHeight}px`,
     'cursor:pointer',
     'padding:0',
     'border:none',
@@ -53,7 +56,7 @@ function createPinElement(onSelect: () => void, color: string): HTMLButtonElemen
     'filter:drop-shadow(0 1px 2px rgba(0,0,0,0.32))',
   ].join(';');
 
-  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="16" height="22" aria-hidden="true" focusable="false">
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="${pinWidth}" height="${pinHeight}" aria-hidden="true" focusable="false">
     <path fill="${color}" stroke="#fff" stroke-width="28" d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0z"/>
     <circle cx="192" cy="192" r="72" fill="#fff" opacity="0.92"/>
   </svg>`;

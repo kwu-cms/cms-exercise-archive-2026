@@ -11,6 +11,8 @@
   /* ---- 教員アクセント（3セットの識別色） ---- */
   --color-takawo: #b5722c;      /* 高尾｜診断メディア＝黄土 */
   --color-takawo-tint: #f1e2cd;
+  --color-takawo-hero-bg: #131822;   /* 高尾ヒーロー｜濃紺 */
+  --color-takawo-hero-bg-mid: #1a2435;
   --color-mizuno: #3f5a73;     /* 水野｜AIと日記＝藍鼠 */
   --color-mizuno-tint: #dde6ec;
   --color-yao: #55663c;        /* 八尾｜アートアーカイブ＝苔緑 */
